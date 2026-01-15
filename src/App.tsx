@@ -9,6 +9,7 @@ import AuthPage from "./pages/AuthPage";
 import SearchPage from "./pages/SearchPage";
 import ComparePage from "./pages/ComparePage";
 import ProfilePage from "./pages/ProfilePage";
+import ConnectionsPage from "./pages/ConnectionsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/search" element={<SearchPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/connections/:trackId" element={<ConnectionsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

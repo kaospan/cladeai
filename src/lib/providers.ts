@@ -1,6 +1,6 @@
 // Music provider utilities and link generation
 
-export type MusicProvider = 'spotify' | 'youtube';
+export type MusicProvider = 'spotify' | 'youtube' | 'apple_music' | 'deezer' | 'soundcloud' | 'amazon_music';
 
 export interface ProviderLink {
   provider: MusicProvider;
@@ -17,6 +17,10 @@ export interface TrackProviderInfo {
   urlSpotifyWeb?: string;
   urlSpotifyApp?: string;
   urlYoutube?: string;
+  appleMusicId?: string;
+  deezerId?: string;
+  soundcloudId?: string;
+  amazonMusicId?: string;
 }
 
 // Generate Spotify URLs from track ID
@@ -90,4 +94,8 @@ export function openProviderLink(link: ProviderLink, preferApp = true): void {
 export const PROVIDER_INFO: Record<MusicProvider, { name: string; icon: string; color: string }> = {
   spotify: { name: 'Spotify', icon: '🎵', color: '#1DB954' },
   youtube: { name: 'YouTube', icon: '▶️', color: '#FF0000' },
+  apple_music: { name: 'Apple Music', icon: '🍎', color: '#FA243C' },
+  deezer: { name: 'Deezer', icon: '🎧', color: '#FF6600' },
+  soundcloud: { name: 'SoundCloud', icon: '☁️', color: '#FF5500' },
+  amazon_music: { name: 'Amazon Music', icon: '📦', color: '#00A8E1' },
 };
