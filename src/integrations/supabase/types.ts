@@ -90,6 +90,30 @@ export type Database = {
           },
         ]
       }
+      nearby_activity: {
+        Row: {
+          artist: string | null
+          id: string
+          listened_at: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          artist?: string | null
+          id?: string
+          listened_at?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          artist?: string | null
+          id?: string
+          listened_at?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -176,6 +200,44 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      track_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          track_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          track_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "track_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tracks: {
         Row: {
@@ -328,6 +390,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_locations: {
+        Row: {
+          id: string
+          latitude: number
+          longitude: number
+          radius_km: number
+          sharing_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          latitude: number
+          longitude: number
+          radius_km?: number
+          sharing_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          latitude?: number
+          longitude?: number
+          radius_km?: number
+          sharing_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_provider_preferences: {
         Row: {
