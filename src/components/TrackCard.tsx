@@ -1,10 +1,14 @@
 import { motion } from 'framer-motion';
-import { Heart, Bookmark, X, Sparkles, Waves, Share2, Play, Pause } from 'lucide-react';
+import { Heart, Bookmark, X, Sparkles, Waves, Play, Pause } from 'lucide-react';
 import { HarmonyCard } from './HarmonyCard';
+import { CommentsSheet } from './CommentsSheet';
+import { NearbyListenersSheet } from './NearbyListenersSheet';
+import { ShareSheet } from './ShareSheet';
 import { Button } from '@/components/ui/button';
 import { Track, InteractionType } from '@/types';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useRecordListeningActivity } from '@/hooks/api/useNearbyListeners';
 
 interface TrackCardProps {
   track: Track;
@@ -15,9 +19,23 @@ interface TrackCardProps {
 
 export function TrackCard({ track, isActive, onInteraction, interactions = new Set() }: TrackCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const recordActivity = useRecordListeningActivity();
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    const newState = !isPlaying;
+    setIsPlaying(newState);
+    
+    // Record listening activity when playing
+    if (newState) {
+      recordActivity.mutate({ 
+        trackId: track.id, 
+        artist: track.artist 
+      });
+    }
+  };
+
+  const handleShare = () => {
+    onInteraction('share');
   };
 
   return (
@@ -102,7 +120,7 @@ export function TrackCard({ track, isActive, onInteraction, interactions = new S
           </motion.div>
         )}
 
-        {/* Action buttons */}
+        {/* Main action buttons */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -155,18 +173,26 @@ export function TrackCard({ track, isActive, onInteraction, interactions = new S
           />
         </motion.div>
 
-        {/* Share */}
-        <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground gap-2"
-            onClick={() => onInteraction('share')}
-          >
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-        </div>
+        {/* Secondary actions: Comments, Nearby, Share */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="flex items-center justify-center gap-4"
+        >
+          {/* Comments */}
+          <CommentsSheet trackId={track.id} trackTitle={track.title} />
+
+          {/* Nearby Listeners */}
+          <NearbyListenersSheet 
+            trackId={track.id} 
+            artist={track.artist} 
+            trackTitle={track.title}
+          />
+
+          {/* Share */}
+          <ShareSheet track={track} onShare={handleShare} />
+        </motion.div>
       </div>
     </motion.div>
   );

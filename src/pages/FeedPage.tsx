@@ -80,16 +80,18 @@ export default function FeedPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex]);
 
-  // Handle touch/scroll
+  // Handle touch/scroll with improved swipe detection
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     let startY = 0;
+    let startX = 0;
     let isDragging = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
       isDragging = true;
     };
 
@@ -98,10 +100,13 @@ export default function FeedPage() {
       isDragging = false;
 
       const endY = e.changedTouches[0].clientY;
-      const diff = startY - endY;
+      const endX = e.changedTouches[0].clientX;
+      const diffY = startY - endY;
+      const diffX = startX - endX;
 
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
+      // Only trigger vertical swipe if vertical movement > horizontal
+      if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 50) {
+        if (diffY > 0) {
           goToNext();
         } else {
           goToPrevious();
@@ -109,8 +114,8 @@ export default function FeedPage() {
       }
     };
 
-    container.addEventListener('touchstart', handleTouchStart);
-    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
