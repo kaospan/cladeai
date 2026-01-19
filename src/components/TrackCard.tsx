@@ -20,9 +20,18 @@ interface TrackCardProps {
   isActive: boolean;
   onInteraction: (type: InteractionType) => void;
   interactions?: Set<InteractionType>;
+  onPipModeActivate?: (videoId: string, title: string) => void;
+  isPipActive?: boolean;
 }
 
-export function TrackCard({ track, isActive, onInteraction, interactions = new Set() }: TrackCardProps) {
+export function TrackCard({ 
+  track, 
+  isActive, 
+  onInteraction, 
+  interactions = new Set(),
+  onPipModeActivate,
+  isPipActive = false,
+}: TrackCardProps) {
   const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showStreamingLinks, setShowStreamingLinks] = useState(false);
@@ -167,7 +176,7 @@ export function TrackCard({ track, isActive, onInteraction, interactions = new S
 
         {/* YouTube Embed Player */}
         <AnimatePresence>
-          {showYouTubeEmbed && track.youtube_id && (
+          {showYouTubeEmbed && track.youtube_id && !isPipActive && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -178,6 +187,12 @@ export function TrackCard({ track, isActive, onInteraction, interactions = new S
                 videoId={track.youtube_id}
                 title={`${track.title} - ${track.artist}`}
                 onClose={() => setShowYouTubeEmbed(false)}
+                onPipModeChange={(isPip) => {
+                  if (isPip && onPipModeActivate && track.youtube_id) {
+                    onPipModeActivate(track.youtube_id, `${track.title} - ${track.artist}`);
+                    setShowYouTubeEmbed(false);
+                  }
+                }}
               />
             </motion.div>
           )}

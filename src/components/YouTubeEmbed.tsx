@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { X, Maximize2, Minimize2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Maximize2, Minimize2, PictureInPicture2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -8,14 +8,78 @@ interface YouTubeEmbedProps {
   videoId: string;
   title?: string;
   onClose?: () => void;
+  onPipModeChange?: (isPip: boolean) => void;
   className?: string;
 }
 
-export function YouTubeEmbed({ videoId, title, onClose, className }: YouTubeEmbedProps) {
+export function YouTubeEmbed({ videoId, title, onClose, onPipModeChange, className }: YouTubeEmbedProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPipMode, setIsPipMode] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Build embed URL with parameters for inline playback
   const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+
+  const togglePipMode = () => {
+    const newPipState = !isPipMode;
+    setIsPipMode(newPipState);
+    onPipModeChange?.(newPipState);
+  };
+
+  const handleClose = () => {
+    setIsPipMode(false);
+    onPipModeChange?.(false);
+    onClose?.();
+  };
+
+  // PiP mode renders a fixed mini player in bottom-right
+  if (isPipMode) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        drag
+        dragConstraints={{ left: -300, right: 0, top: -400, bottom: 0 }}
+        className="fixed bottom-24 right-4 z-50 w-[280px] aspect-video rounded-xl overflow-hidden shadow-2xl bg-black border border-border"
+        style={{ touchAction: 'none' }}
+      >
+        {/* Mini control bar */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-1.5 bg-gradient-to-b from-black/80 to-transparent">
+          <span className="text-white text-xs font-medium truncate px-1 max-w-[150px]">{title}</span>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-white hover:bg-white/20"
+              onClick={togglePipMode}
+              title="Exit mini player"
+            >
+              <Maximize2 className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-white hover:bg-white/20"
+              onClick={handleClose}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        <iframe
+          ref={iframeRef}
+          src={embedUrl}
+          title={title || 'YouTube video player'}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -38,6 +102,15 @@ export function YouTubeEmbed({ videoId, title, onClose, className }: YouTubeEmbe
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-white hover:bg-white/20"
+            onClick={togglePipMode}
+            title="Mini player (keeps playing while you browse)"
+          >
+            <PictureInPicture2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-white hover:bg-white/20"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {isExpanded ? (
@@ -51,7 +124,7 @@ export function YouTubeEmbed({ videoId, title, onClose, className }: YouTubeEmbe
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-white hover:bg-white/20"
-              onClick={onClose}
+              onClick={handleClose}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -59,8 +132,9 @@ export function YouTubeEmbed({ videoId, title, onClose, className }: YouTubeEmbe
         </div>
       </div>
 
-      {/* YouTube iframe - allow attribute ensures playback without blur/focus issues */}
+      {/* YouTube iframe */}
       <iframe
+        ref={iframeRef}
         src={embedUrl}
         title={title || 'YouTube video player'}
         className="w-full h-full"
