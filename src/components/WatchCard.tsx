@@ -181,13 +181,7 @@ export function WatchCard({
                 {/* Section timeline (when watching) */}
                 {isWatching && showSections && (
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3">
-                    <TrackSections
-                      trackId={track.id}
-                      currentTime={currentTime}
-                      durationMs={track.duration_ms || 240000}
-                      compact
-                      showTimeline={true}
-                    />
+                    <TrackSections trackId={track.id} />
                   </div>
                 )}
               </div>

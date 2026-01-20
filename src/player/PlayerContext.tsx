@@ -83,6 +83,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setIsPlaying,
     openPlayer: (payload) => {
       setState((prev) => ({
+        ...prev,
         open: true,
         canonicalTrackId: payload.canonicalTrackId ?? prev.canonicalTrackId,
         provider: payload.provider,
