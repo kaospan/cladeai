@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
+import { PageLayout, EmptyState, LoadingSpinner } from '@/components/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -15,9 +15,6 @@ import {
   Bookmark,
   ChevronRight,
   Zap,
-  Crown,
-  Calendar,
-  Filter,
   Check,
   Clock,
 } from 'lucide-react';
@@ -26,6 +23,7 @@ import { useProfile, useUserProviders, useSetPreferredProvider } from '@/hooks/a
 import { PROVIDER_INFO } from '@/lib/providers';
 import { MusicProvider } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
+import { fadeInUp } from '@/lib/animations';
 
 // Mock taste DNA data
 const tasteDNA = {
@@ -73,67 +71,39 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-24">
-        <header className="sticky top-0 z-40 glass-strong safe-top">
-          <div className="px-4 py-4 max-w-lg mx-auto">
-            <h1 className="text-xl font-bold">Profile</h1>
-          </div>
-        </header>
-
-        <main className="px-4 py-8 max-w-lg mx-auto text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-muted/50">
-            <User className="w-12 h-12 text-muted-foreground" />
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold">Sign in to see your profile</h2>
-            <p className="text-muted-foreground">
-              Track your harmonic taste DNA and saved songs
-            </p>
-          </div>
-
-          <Button
-            onClick={() => navigate('/auth')}
-            className="bg-primary hover:bg-primary/90"
-          >
-            Sign in
-          </Button>
-        </main>
-
-        <BottomNav />
-      </div>
+      <PageLayout title="Profile">
+        <EmptyState
+          icon={User}
+          title="Sign in to see your profile"
+          description="Track your harmonic taste DNA and saved songs"
+          actionLabel="Sign in"
+          onAction={() => navigate('/auth')}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 glass-strong safe-top">
-        <div className="px-4 py-4 max-w-lg mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">Profile</h1>
-          <Button variant="ghost" size="icon" onClick={handleSignOut}>
-            <LogOut className="w-5 h-5" />
-          </Button>
-        </div>
-      </header>
-
-      {/* Content */}
-      <main className="px-4 py-4 max-w-lg mx-auto space-y-6">
-        {/* User info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 p-4 glass rounded-2xl"
-        >
+    <PageLayout
+      title="Profile"
+      headerActions={
+        <Button variant="ghost" size="icon" onClick={handleSignOut}>
+          <LogOut className="w-5 h-5" />
+        </Button>
+      }
+    >
+      {/* User info */}
+      <motion.div
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        className="flex items-center gap-4 p-4 glass rounded-2xl"
+      >
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <span className="text-2xl font-bold text-white">
               {user.email?.[0].toUpperCase() || 'U'}
@@ -147,8 +117,9 @@ export default function ProfilePage() {
 
         {/* Credits */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
           transition={{ delay: 0.05 }}
           className="p-4 glass rounded-2xl"
         >
@@ -172,8 +143,9 @@ export default function ProfilePage() {
 
         {/* Taste DNA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
           transition={{ delay: 0.1 }}
           className="space-y-4"
         >
@@ -244,8 +216,9 @@ export default function ProfilePage() {
 
         {/* Connected providers */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
           transition={{ delay: 0.15 }}
           className="space-y-3"
         >

@@ -1,0 +1,69 @@
+import { ReactNode } from 'react';
+import { BottomNav } from '@/components/BottomNav';
+
+interface PageLayoutProps {
+  /** Page title shown in header */
+  title?: string;
+  /** Custom header content (replaces title) */
+  headerContent?: ReactNode;
+  /** Right-aligned header action buttons */
+  headerActions?: ReactNode;
+  /** Main content */
+  children: ReactNode;
+  /** Use fixed header (default: sticky) */
+  fixedHeader?: boolean;
+  /** Hide bottom navigation */
+  hideNav?: boolean;
+  /** Additional class for main content */
+  mainClassName?: string;
+  /** Full-width content (no max-w constraint) */
+  fullWidth?: boolean;
+}
+
+/**
+ * Standard page layout wrapper with consistent header, main, and navigation.
+ * Reduces duplication across pages by providing a common structure.
+ */
+export function PageLayout({
+  title,
+  headerContent,
+  headerActions,
+  children,
+  fixedHeader = false,
+  hideNav = false,
+  mainClassName = '',
+  fullWidth = false,
+}: PageLayoutProps) {
+  const headerPositionClass = fixedHeader 
+    ? 'fixed top-0 left-0 right-0' 
+    : 'sticky top-0';
+  
+  const containerWidth = fullWidth ? '' : 'max-w-lg mx-auto';
+  const mainPadding = fixedHeader ? 'pt-16 pb-24' : 'pb-24';
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className={`z-40 glass-strong safe-top ${headerPositionClass}`}>
+        <div className={`px-4 py-4 ${containerWidth}`}>
+          {headerContent ? (
+            headerContent
+          ) : (
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold">{title}</h1>
+              {headerActions}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className={`px-4 py-4 ${containerWidth} space-y-6 ${mainPadding} ${mainClassName}`}>
+        {children}
+      </main>
+
+      {/* Bottom Navigation */}
+      {!hideNav && <BottomNav />}
+    </div>
+  );
+}
