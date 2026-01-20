@@ -12,4 +12,5 @@ export * from './usePlayEvents';
 export * from './useProfile';
 export * from './useSearch';
 export * from './useSpotifyConnect';
+export * from './useSpotifyUser';
 export * from './useTracks';

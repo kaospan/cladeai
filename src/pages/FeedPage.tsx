@@ -5,9 +5,10 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { BottomNav } from '@/components/BottomNav';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
 import { useFeedTracks } from '@/hooks/api/useTracks';
+import { useSpotifyRecentlyPlayed } from '@/hooks/api/useSpotifyUser';
 import { useAuth } from '@/hooks/useAuth';
-import { InteractionType } from '@/types';
-import { ChevronUp, ChevronDown, LogIn, AlertCircle } from 'lucide-react';
+import { InteractionType, Track } from '@/types';
+import { ChevronUp, ChevronDown, LogIn, AlertCircle, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -16,10 +17,25 @@ export default function FeedPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Use trackService with automatic fallback to seed data
+  // Fetch from multiple sources
   const { data: trackResult, isLoading: tracksLoading, error: tracksError } = useFeedTracks(50);
-  const tracks = trackResult?.tracks ?? [];
-  const dataSource = trackResult?.source;
+  const { data: spotifyData, isLoading: spotifyLoading } = useSpotifyRecentlyPlayed(20);
+  
+  // Merge Spotify recently played with feed tracks, preferring Spotify when available
+  const feedTracks = trackResult?.tracks ?? [];
+  const spotifyTracks = spotifyData?.tracks ?? [];
+  
+  // Combine: Spotify recently played first, then fill with other tracks (deduped)
+  const tracks: Track[] = (() => {
+    if (spotifyTracks.length > 0) {
+      const spotifyIds = new Set(spotifyTracks.map(t => t.spotify_id));
+      const otherTracks = feedTracks.filter(t => !spotifyIds.has(t.spotify_id));
+      return [...spotifyTracks, ...otherTracks];
+    }
+    return feedTracks;
+  })();
+  
+  const dataSource = spotifyTracks.length > 0 ? 'spotify' : trackResult?.source;
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionType>>>(new Map());
@@ -164,8 +180,13 @@ export default function FeedPage() {
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <h1 className="text-lg font-bold gradient-text">HarmonyFeed</h1>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               {currentIndex + 1} / {tracks.length}
+              {dataSource === 'spotify' && (
+                <span className="ml-1 text-[#1DB954] flex items-center gap-0.5" title="Your Spotify history">
+                  <Music className="w-3 h-3" />
+                </span>
+              )}
               {dataSource === 'seed' && (
                 <span className="ml-1 text-amber-500" title="Using demo data">•</span>
               )}

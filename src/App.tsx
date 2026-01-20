@@ -15,6 +15,7 @@ const ComparePage = lazy(() => import("./pages/ComparePage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ConnectionsPage = lazy(() => import("./pages/ConnectionsPage"));
 const FollowingPage = lazy(() => import("./pages/FollowingPage"));
+const SpotifyCallbackPage = lazy(() => import("./pages/SpotifyCallbackPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/following" element={<FollowingPage />} />
               <Route path="/connections/:trackId" element={<ConnectionsPage />} />
+              <Route path="/spotify-callback" element={<SpotifyCallbackPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
