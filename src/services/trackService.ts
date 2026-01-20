@@ -75,8 +75,10 @@ async function fetchFromDatabase(query: TrackQuery): Promise<Track[] | null> {
     }
     
     if (query.search) {
+      // Sanitize search input to prevent filter injection
+      const sanitizedSearch = query.search.replace(/[%_,().*\\]/g, '');
       supabaseQuery = supabaseQuery.or(
-        `title.ilike.%${query.search}%,artist.ilike.%${query.search}%`
+        `title.ilike.%${sanitizedSearch}%,artist.ilike.%${sanitizedSearch}%`
       );
     }
     

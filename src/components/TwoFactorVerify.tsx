@@ -3,23 +3,21 @@ import { motion } from 'framer-motion';
 import { Shield, Loader2, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { verifyTOTP, verifyBackupCode } from '@/lib/totp';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface TwoFactorVerifyProps {
-  secret: string;
-  hashedBackupCodes: string[];
   onSuccess: () => void;
   onCancel: () => void;
-  onBackupCodeUsed?: (index: number) => void;
 }
 
+/**
+ * 2FA Verification Component
+ * SECURITY: All verification happens server-side via Edge Function
+ */
 export function TwoFactorVerify({ 
-  secret, 
-  hashedBackupCodes,
   onSuccess, 
   onCancel,
-  onBackupCodeUsed
 }: TwoFactorVerifyProps) {
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -41,26 +39,25 @@ export function TwoFactorVerify({
     setIsVerifying(true);
 
     try {
-      if (useBackupCode) {
-        const codeIndex = await verifyBackupCode(code, hashedBackupCodes);
-        if (codeIndex === -1) {
-          toast.error('Invalid backup code');
-          setIsVerifying(false);
-          return;
-        }
-        // Notify parent to remove used backup code
-        onBackupCodeUsed?.(codeIndex);
-        toast.success('Backup code accepted');
-        onSuccess();
-      } else {
-        const isValid = await verifyTOTP(secret, code);
-        if (!isValid) {
-          toast.error('Invalid code. Please try again.');
-          setIsVerifying(false);
-          return;
-        }
-        onSuccess();
+      // SECURITY: Verify code server-side via Edge Function
+      const { data, error } = await supabase.functions.invoke('verify_2fa', {
+        body: { 
+          action: useBackupCode ? 'verify_backup' : 'verify_totp',
+          code 
+        },
+      });
+
+      if (error || !data?.valid) {
+        toast.error(useBackupCode ? 'Invalid backup code' : 'Invalid code. Please try again.');
+        setIsVerifying(false);
+        return;
       }
+
+      if (useBackupCode && data.remaining_codes !== undefined) {
+        toast.success(`Backup code accepted. ${data.remaining_codes} codes remaining.`);
+      }
+      
+      onSuccess();
     } catch (error) {
       console.error('2FA verification error:', error);
       toast.error('Verification failed. Please try again.');

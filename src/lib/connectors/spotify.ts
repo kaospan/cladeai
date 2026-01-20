@@ -79,11 +79,13 @@ export class SpotifyConnector implements ProviderConnector {
       }
       
       // Fallback: Search cached external_tracks table
+      // Sanitize search input to prevent filter injection
+      const sanitizedQuery = query.replace(/[%_,().*\\]/g, '');
       const { data: cached } = await supabase
         .from('external_tracks')
         .select('*')
         .eq('provider', 'spotify')
-        .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
+        .or(`title.ilike.%${sanitizedQuery}%,artist.ilike.%${sanitizedQuery}%`)
         .limit(limit);
       
       if (cached && cached.length > 0) {
