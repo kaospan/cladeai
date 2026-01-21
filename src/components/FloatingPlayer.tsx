@@ -9,9 +9,11 @@ interface FloatingPlayerProps {
   title: string;
   artist?: string;
   onClose: () => void;
+  seekTime?: number | null;
+  isActive?: boolean;
 }
 
-export function FloatingPlayer({ type, trackId, title, artist, onClose }: FloatingPlayerProps) {
+export function FloatingPlayer({ type, trackId, title, artist, onClose, seekTime, isActive }: FloatingPlayerProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [currentTrackId, setCurrentTrackId] = useState(trackId);
@@ -26,6 +28,21 @@ export function FloatingPlayer({ type, trackId, title, artist, onClose }: Floati
       setCurrentTrackId(trackId);
     }
   }, [trackId, currentTrackId]);
+  
+  // Handle seek time for YouTube
+  useEffect(() => {
+    if (type === 'youtube' && seekTime !== null && seekTime !== undefined && iframeRef.current) {
+      // Post message to YouTube iframe to seek
+      iframeRef.current.contentWindow?.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'seekTo',
+          args: [seekTime, true]
+        }),
+        '*'
+      );
+    }
+  }, [seekTime, type]);
 
   return (
     <AnimatePresence>
@@ -41,7 +58,8 @@ export function FloatingPlayer({ type, trackId, title, artist, onClose }: Floati
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className={cn(
           'rounded-xl shadow-2xl overflow-hidden',
-          'glass-strong border border-border/50',
+          'glass-strong border transition-all',
+          isActive ? 'border-primary/80 ring-2 ring-primary/30' : 'border-border/50',
           isMinimized ? 'w-72' : type === 'spotify' ? 'w-80' : 'w-96'
         )}
       >

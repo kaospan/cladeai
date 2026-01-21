@@ -258,6 +258,26 @@ export function TrackCard({
           >
             {track.artist}
           </motion.p>
+          
+          {/* Metadata */}
+          {(track.tempo || track.genre) && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.07 }}
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+            >
+              {track.tempo && (
+                <span className="font-medium">{Math.round(track.tempo)} BPM</span>
+              )}
+              {track.tempo && track.genre && (
+                <span>•</span>
+              )}
+              {track.genre && (
+                <span className="capitalize">{track.genre}</span>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* Compact Song Sections - always visible */}

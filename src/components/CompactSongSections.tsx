@@ -39,19 +39,28 @@ export function CompactSongSections({
   trackArtist,
   className 
 }: CompactSongSectionsProps) {
-  const { playYouTube, playSpotify } = useFloatingPlayers();
+  const { playYouTube, playSpotify, youtubePlayer, spotifyPlayer, seekYouTube } = useFloatingPlayers();
 
   const handleSectionClick = (section: TrackSection) => {
     const startSeconds = Math.floor(section.start_ms / 1000);
     
+    // Check if this track is already playing
+    const isYoutubePlaying = youtubePlayer?.trackId.includes(youtubeId || '');
+    const isSpotifyPlaying = spotifyPlayer?.trackId === spotifyId;
+    
     if (youtubeId) {
-      // Play YouTube at specific timestamp
-      playYouTube(
-        `${youtubeId}&start=${startSeconds}`,
-        trackTitle,
-        trackArtist
-      );
-    } else if (spotifyId) {
+      if (isYoutubePlaying) {
+        // Seek in existing player
+        seekYouTube(startSeconds);
+      } else {
+        // Start new playback at timestamp
+        playYouTube(
+          `${youtubeId}&start=${startSeconds}`,
+          trackTitle,
+          trackArtist
+        );
+      }
+    } else if (spotifyId && !isSpotifyPlaying) {
       // Spotify doesn't support timestamp, just play from start
       playSpotify(spotifyId, trackTitle, trackArtist);
     }
