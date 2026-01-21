@@ -74,7 +74,7 @@ export function useSpotifyTopTracks(timeRange: TimeRange = 'medium_term', limit 
     queryKey: ['spotify-top-tracks', user?.id, timeRange, limit],
     queryFn: () => getTopTracks(user!.id, timeRange, limit),
     enabled: !!user && isConnected === true,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 }
 
