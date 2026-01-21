@@ -17,8 +17,8 @@ export function FloatingPlayer({ type, trackId, title, artist, onClose }: Floati
   const [currentTrackId, setCurrentTrackId] = useState(trackId);
 
   const embedUrl = type === 'spotify'
-    ? `https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0`
-    : `https://www.youtube.com/embed/${currentTrackId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+    ? `https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0&autoplay=1`
+    : `https://www.youtube.com/embed/${currentTrackId}?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
 
   // Update iframe src when trackId changes without remounting
   useEffect(() => {
