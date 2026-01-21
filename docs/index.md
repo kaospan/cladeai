@@ -4,20 +4,48 @@ title: Welcome to CladeAI
 
 # 🎵 CladeAI Documentation
 
-CladeAI is a music discovery app that helps you find songs based on harmonic progressions and connect with listeners who share your taste.
+CladeAI is a TikTok-style music discovery platform that analyzes songs by **harmonic structure**, not genre. Find tracks using chord progressions, cadence patterns, and relative theory.
 
-- [Features](features.md)
-- [Tech Stack](tech-stack.md)
-- [Getting Started](getting-started.md)
-- [Development](development.md)
-- [Testing](testing.md)
-- [Building for Production](build.md)
-- [Deployment](deployment.md)
-- [Usage Guide](usage.md)
-- [Contributing](contributing.md)
-- [FAQ](faq.md)
-- [License](license.md)
+## 📚 Documentation
+
+### Getting Started
+- [Features](features.md) — Complete feature list with harmonic analysis
+- [Tech Stack](tech-stack.md) — React 18, TypeScript, Vite, Supabase
+- [Getting Started](getting-started.md) — Installation and setup
+- [Usage Guide](usage.md) — How to use the app
+
+### Development
+- [Development Guide](development.md) — Local development workflow
+- [Testing](testing.md) — Vitest and Cypress testing
+- [Building for Production](build.md) — Production builds
+- [Deployment](deployment.md) — GitHub Pages and hosting
+
+### Architecture
+- [Harmonic Analysis Architecture](HARMONIC_ANALYSIS_ARCHITECTURE.md) — **Core system design** (relative theory, hybrid pipeline, similarity engine)
+- [Architecture Summary](ARCHITECTURE_SUMMARY.md) — Quick reference for technical decisions
+
+### Contributing
+- [Contributing Guide](contributing.md) — How to contribute
+- [FAQ](faq.md) — Common questions
+- [License](license.md) — MIT License
+
+### Reference
+- [Changelog](../CHANGELOG.md) — Version history and recent changes
+- [Tasks](../TASKS.md) — Current progress and roadmap
 
 ---
 
-If you have any questions or need help, open an issue on GitHub or reach out to the maintainer.
+## 🎯 Key Concepts
+
+### Relative Theory-First
+All harmonic data stored as **Roman numerals** (I-V-vi-IV), never absolute chords. Absolute keys derived only for display.
+
+### Hybrid Analysis Pipeline
+Cache-first approach → Async job queue → ML processing → Result storage. Non-blocking UI with provisional results.
+
+### Similarity by Harmony
+Tracks matched by: Progression shape (50%), Cadence (20%), Loop length (15%), Modal color (10%), Tempo (5%). Genre is a secondary signal.
+
+---
+
+If you have questions or need help, open an issue on [GitHub](https://github.com/repoisrael/cladeai) or reach out to the maintainer.

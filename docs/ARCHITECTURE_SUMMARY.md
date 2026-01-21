@@ -4,6 +4,7 @@
 
 ## Product Vision
 
+
 TikTok-style music discovery platform that analyzes songs by **harmonic structure**, not genre. Songs are clustered by relative chord progressions, tonal center, cadence type, and loop structure.
 
 ## Core Architecture (Non-Negotiable)

@@ -1,6 +1,25 @@
 # 🎯 CladeAI - Task List & Progress
 
+**Last Updated**: January 21, 2026
+
 ## ✅ Completed Features
+
+### Harmonic Analysis Architecture (Jan 2026)
+- [x] **Relative theory type system** — HarmonicFingerprint, RomanChord, CadenceType, ModalColor types
+- [x] **Hybrid analysis pipeline** — Cache-first with async job queueing (harmonicAnalysis.ts)
+- [x] **Similarity engine** — Track matching by progression shape, cadence, loop length (similarityEngine.ts)
+- [x] **Confidence scoring** — 0.0-1.0 scores with provisional flags
+- [x] **Analysis status UI** — AnalysisStatusBadge with confidence indicators
+- [x] **Model versioning** — Analysis results tagged with version numbers
+- [x] **Comprehensive documentation** — HARMONIC_ANALYSIS_ARCHITECTURE.md, ARCHITECTURE_SUMMARY.md
+
+### Responsive Desktop UI (Jan 2026)
+- [x] **ResponsiveLayout components** — ResponsiveContainer, ResponsiveGrid, DesktopColumns, DesktopSidebarLayout
+- [x] **FeedPage desktop layout** — 3-column with left sidebar (metadata, progress, shortcuts)
+- [x] **SearchPage responsive** — Adaptive container with breakpoint optimization
+- [x] **Breakpoint system** — sm/md/lg/xl/2xl (640px-1536px+)
+- [x] **Desktop sidebars** — FeedSidebar with track info and keyboard shortcuts
+- [x] **Mobile-first preservation** — Seamless mobile experience maintained
 
 ### Core Features
 - [x] Music feed with swipeable track cards
@@ -10,24 +29,39 @@
 - [x] YouTube video discovery & playback
 - [x] Floating PiP players (Spotify + YouTube)
 - [x] Jump-to-time section navigation
-- [x] Active player z-index management
+- [x] Active player z-index management (100 for active, 50 for inactive)
 - [x] Search history with localStorage
 - [x] Track detail page with tabs (Sections, Chords, Videos, Samples)
-- [x] BPM and genre metadata display
-- [x] Queue management system
-- [x] 3-dot track menu (Play Next, Add to Queue, View Album/Artist, etc.)
+- [x] BPM and genre metadata display (formatBPM utility)
+- [x] Queue management system (QueueContext with 6 operations)
+- [x] 3-dot track menu (Play Next, Add to Queue, View Album/Artist, Similar Progressions)
 - [x] Compact song sections in feed
 - [x] Auto-generated song structure (intro/verse/chorus)
-- [x] Advanced chord quality parsing (maj7, dim, sus, etc.)
+- [x] Advanced chord quality parsing (maj7, dim, sus, add9, etc.)
+
+### Rich Metadata (Jan 2026)
+- [x] **Song credits** — Songwriter, producer, label, release_date fields
+- [x] **Credits display** — ProfilePage all-time history with full metadata
+- [x] **Multiple genres** — genres[] array support with genre_description
+- [x] **Tempo detection** — tempo field with formatBPM display
+
+### Code Quality (Jan 2026)
+- [x] **DRY refactoring** — ProviderBadge, GlassCard reusable components
+- [x] **Centralized formatters** — formatBPM, capitalize, formatRelativeTime in formatters.ts
+- [x] **Type safety** — Strict TypeScript with comprehensive interfaces
+- [x] **Modular architecture** — Separated services (harmonicAnalysis, similarityEngine, lastfmService)
+- [x] **Config-driven** — ANALYSIS_CONFIG for thresholds and settings
 
 ### UI/UX
 - [x] Responsive design with mobile-first approach
-- [x] Dark mode with glass morphism effects
+- [x] Dark mode with glass morphism effects (GlassCard component)
 - [x] Smooth animations with Framer Motion
 - [x] Bottom navigation for mobile
-- [x] Skeleton loading states
+- [x] Skeleton loading states (FeedSkeleton)
 - [x] Error boundaries and error handling
 - [x] Accessibility labels and ARIA attributes
+- [x] **Responsive typography** — text-sm lg:text-base scaling
+- [x] **Adaptive layouts** — Multi-column grids for desktop
 
 ### Infrastructure
 - [x] GitHub Pages deployment with SPA routing fix
@@ -36,8 +70,28 @@
 - [x] TypeScript strict mode
 - [x] Vite build optimization
 - [x] Code splitting with lazy loading
+- [x] **Build performance** — 16.43s for 2555 modules (628KB bundle, 192KB gzipped)
 
 ## 🔄 In Progress
+
+### Harmonic Analysis Infrastructure
+- [ ] **Database schema** — Create `harmonic_fingerprints` and `analysis_jobs` tables
+  - Tables: HarmonicFingerprint storage with confidence, cadence, progression
+  - Indexes: confidence_score, cadence_type, loop_length_bars
+  - RLS policies for user access
+  
+- [ ] **ML model integration** — Research Essentia.js vs custom audio analysis
+  - Chroma feature extraction from audio
+  - Key and mode detection
+  - Chord progression identification
+  - Section boundary detection
+  - Confidence score calculation
+
+- [ ] **Background processing** — Supabase Edge Function for async analysis
+  - Queue management system
+  - Job status tracking
+  - Real-time progress updates (WebSockets)
+  - Error handling and retry logic
 
 ### Database
 - [ ] Create `track_connections` table in Supabase
@@ -60,7 +114,16 @@
 
 ## 📋 Backlog
 
-### High Priority
+### High Priority - Harmonic Analysis
+- [ ] **Progression rotation matching** — Detect rotated progressions (I-V-vi-IV ≈ V-vi-IV-I)
+- [ ] **ML embeddings** — Semantic similarity beyond exact matching
+- [ ] **Crowd-sourced corrections** — User feedback mechanism for improving analysis
+- [ ] **Section-aware progressions** — Different progressions for verse/chorus/bridge
+- [ ] **Borrowed chord detection** — Identify chords from parallel modes
+- [ ] **Modulation detection** — Track key changes within songs
+- [ ] **Harmonic clustering** — Group similar tracks with t-SNE visualization
+
+### High Priority - Features
 - [ ] YouTube Music OAuth integration (ProfilePage)
   - Add YouTube OAuth flow
   - Store tokens in user_providers table
