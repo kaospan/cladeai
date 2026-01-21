@@ -15,10 +15,37 @@ import { useSpotifyConnected } from '@/hooks/api/useSpotifyUser';
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: isSpotifyConnected } = useSpotifyConnected();
   const [query, setQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'song' | 'chord'>('song');
+  const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Real-time search results
+  // Debounced Spotify search
+  useEffect(() => {
+    if (searchMode !== 'song' || !query.trim() || !user || !isSpotifyConnected) {
+      setSpotifyResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchSpotify(user.id, query, 20);
+        setSpotifyResults(results);
+      } catch (error) {
+        console.error('Spotify search error:', error);
+        setSpotifyResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [query, searchMode, user, isSpotifyConnected]);
+
+  // Real-time search results (local seed tracks)
   const results = useMemo(() => {
     if (!query.trim()) return [];
 
@@ -50,22 +77,8 @@ export default function SearchPage() {
   }, [query, searchMode]);
 
   const handlePlayOnProvider = (track: Track) => {
-    const links = getProviderLinks({
-      spotifyId: track.spotify_id,
-      youtubeId: track.youtube_id,
-      urlSpotifyWeb: track.url_spotify_web,
-      urlSpotifyApp: track.url_spotify_app,
-      urlYoutube: track.url_youtube,
-    });
-    
-    // Prefer Spotify, then YouTube
-    const spotifyLink = links.find(l => l.provider === 'spotify');
-    const youtubeLink = links.find(l => l.provider === 'youtube');
-    const link = spotifyLink || youtubeLink || links[0];
-    
-    if (link) {
-      openProviderLink(link, true); // Try app first
-    }
+    // Navigate to track detail page instead of opening external link
+    navigate(`/track/${encodeURIComponent(track.id)}`);
   };
 
   return (
@@ -152,12 +165,53 @@ export default function SearchPage() {
         )}
 
         {/* Search results */}
-        {results.length > 0 && (
+        {(spotifyResults.length > 0 || results.length > 0) && (
           <section>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-3">
-              Results ({results.length})
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              Results ({spotifyResults.length + results.length})
+              {isSearching && <Loader2 className="w-3 h-3 animate-spin" />}
+              {spotifyResults.length > 0 && (
+                <span className="text-[#1DB954] text-xs">via Spotify</span>
+              )}
             </h2>
             <div className="space-y-2">
+              {/* Spotify results first */}
+              {spotifyResults.map((track, index) => (
+                <motion.div
+                  key={track.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="p-4 glass rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handlePlayOnProvider(track)}
+                >
+                  <div className="flex gap-4">
+                    {track.cover_url && (
+                      <img
+                        src={track.cover_url}
+                        alt=""
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">{track.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {track.artist}
+                      </p>
+                      {track.album && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {track.album}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <Play className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              
+              {/* Local seed track results */}
               {results.map((track, index) => (
                 <motion.div
                   key={track.id}
