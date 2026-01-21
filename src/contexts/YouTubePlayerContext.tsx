@@ -4,7 +4,7 @@
  * Manages a global YouTube player that continues playing across navigation
  */
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 
 interface VideoData {
   videoId: string;
@@ -16,10 +16,13 @@ interface VideoData {
 interface YouTubePlayerContextValue {
   currentVideo: VideoData | null;
   isPlaying: boolean;
+  currentTime: number; // Current playback time in seconds
+  duration: number; // Total duration in seconds
   playVideo: (video: VideoData) => void;
   pauseVideo: () => void;
   stopVideo: () => void;
   setIsPlaying: (playing: boolean) => void;
+  seekTo: (seconds: number) => void;
 }
 
 const YouTubePlayerContext = createContext<YouTubePlayerContextValue | null>(null);
@@ -27,10 +30,35 @@ const YouTubePlayerContext = createContext<YouTubePlayerContextValue | null>(nul
 export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
   const [currentVideo, setCurrentVideo] = useState<VideoData | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const playerRef = useRef<any>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update current time while playing
+  useEffect(() => {
+    if (isPlaying && currentVideo) {
+      intervalRef.current = setInterval(() => {
+        setCurrentTime(prev => prev + 0.1);
+      }, 100);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isPlaying, currentVideo]);
 
   const playVideo = (video: VideoData) => {
     setCurrentVideo(video);
     setIsPlaying(true);
+    setCurrentTime(video.startSeconds || 0);
   };
 
   const pauseVideo = () => {
@@ -40,6 +68,12 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
   const stopVideo = () => {
     setCurrentVideo(null);
     setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
+  const seekTo = (seconds: number) => {
+    setCurrentTime(seconds);
   };
 
   return (
@@ -47,10 +81,13 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
       value={{
         currentVideo,
         isPlaying,
+        currentTime,
+        duration,
         playVideo,
         pauseVideo,
         stopVideo,
         setIsPlaying,
+        seekTo,
       }}
     >
       {children}

@@ -20,6 +20,9 @@ export interface TrackSection {
   start_ms: number;
   end_ms: number;
   created_at: string;
+  // Optional chord progression specific to this section
+  chords?: string[]; // Roman numerals
+  chord_timings?: number[]; // Millisecond timestamps for each chord within the section
 }
 
 // Playback provider for player context

@@ -36,7 +36,7 @@ export default function TrackDetailPage() {
   const { trackId } = useParams();
   const navigate = useNavigate();
   const { data: track, isLoading } = useTrack(decodeURIComponent(trackId || ''));
-  const { playVideo, currentVideo } = useYouTubePlayer();
+  const { playVideo, currentVideo, currentTime, seekTo } = useYouTubePlayer();
   
   const [sections, setSections] = useState<TrackSection[]>([]);
   const [hooktheoryData, setHooktheoryData] = useState<any>(null);
@@ -44,6 +44,27 @@ export default function TrackDetailPage() {
   const [youtubeVideos, setYoutubeVideos] = useState<VideoSource[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  
+  // Get current section and chord based on playback time
+  const currentTimeMs = currentTime * 1000;
+  const currentSection = sections.find(
+    s => currentTimeMs >= s.start_ms && currentTimeMs < s.end_ms
+  );
+  
+  // Calculate current chord index within the section
+  const getCurrentChordIndex = () => {
+    if (!currentSection?.chords || !currentSection?.chord_timings) return -1;
+    
+    const sectionTime = currentTimeMs - currentSection.start_ms;
+    for (let i = currentSection.chord_timings.length - 1; i >= 0; i--) {
+      if (sectionTime >= currentSection.chord_timings[i]) {
+        return i;
+      }
+    }
+    return 0;
+  };
+  
+  const currentChordIndex = getCurrentChordIndex();
   
   // Load sections when track is available
   useEffect(() => {
@@ -146,7 +167,10 @@ export default function TrackDetailPage() {
   function generateDefaultSections(track: Track): TrackSection[] {
     const durationMs = track.duration_ms || 180000; // Default 3 minutes
     
-    // Generate typical song structure
+    // Use track's chord progression if available, distributed across sections
+    const trackChords = track.progression_roman || ['I', 'V', 'vi', 'IV'];
+    
+    // Generate typical song structure with chord progressions
     return [
       {
         id: `${track.id}-intro`,
@@ -155,6 +179,8 @@ export default function TrackDetailPage() {
         start_ms: 0,
         end_ms: Math.floor(durationMs * 0.08), // ~8%
         created_at: new Date().toISOString(),
+        chords: trackChords.slice(0, 2),
+        chord_timings: [0, Math.floor(durationMs * 0.04)],
       },
       {
         id: `${track.id}-verse1`,
@@ -163,6 +189,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.08),
         end_ms: Math.floor(durationMs * 0.3), // ~22%
         created_at: new Date().toISOString(),
+        chords: trackChords,
+        chord_timings: trackChords.map((_, i) => Math.floor((durationMs * 0.22 * i) / trackChords.length)),
       },
       {
         id: `${track.id}-chorus1`,
@@ -171,6 +199,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.3),
         end_ms: Math.floor(durationMs * 0.45), // ~15%
         created_at: new Date().toISOString(),
+        chords: trackChords,
+        chord_timings: trackChords.map((_, i) => Math.floor((durationMs * 0.15 * i) / trackChords.length)),
       },
       {
         id: `${track.id}-verse2`,
@@ -179,6 +209,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.45),
         end_ms: Math.floor(durationMs * 0.6), // ~15%
         created_at: new Date().toISOString(),
+        chords: trackChords,
+        chord_timings: trackChords.map((_, i) => Math.floor((durationMs * 0.15 * i) / trackChords.length)),
       },
       {
         id: `${track.id}-chorus2`,
@@ -187,6 +219,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.6),
         end_ms: Math.floor(durationMs * 0.75), // ~15%
         created_at: new Date().toISOString(),
+        chords: trackChords,
+        chord_timings: trackChords.map((_, i) => Math.floor((durationMs * 0.15 * i) / trackChords.length)),
       },
       {
         id: `${track.id}-bridge`,
@@ -195,6 +229,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.75),
         end_ms: Math.floor(durationMs * 0.85), // ~10%
         created_at: new Date().toISOString(),
+        chords: trackChords.slice(0, 2),
+        chord_timings: [0, Math.floor(durationMs * 0.05)],
       },
       {
         id: `${track.id}-outro`,
@@ -203,6 +239,8 @@ export default function TrackDetailPage() {
         start_ms: Math.floor(durationMs * 0.85),
         end_ms: durationMs, // ~15%
         created_at: new Date().toISOString(),
+        chords: trackChords.slice(0, 2),
+        chord_timings: [0, Math.floor(durationMs * 0.075)],
       },
     ];
   }
@@ -211,12 +249,7 @@ export default function TrackDetailPage() {
     if (!activeVideoId || !track?.artist || !track?.title) return;
     
     const startSeconds = Math.floor(section.start_ms / 1000);
-    playVideo({
-      videoId: activeVideoId,
-      title: track.title,
-      artist: track.artist,
-      startSeconds,
-    });
+    seekTo(startSeconds);
   }
 
   function handlePlayVideo(video: VideoSource) {
@@ -345,28 +378,61 @@ export default function TrackDetailPage() {
                 Song Structure
               </h3>
               <div className="space-y-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => handleSectionClick(section)}
-                    className="w-full p-3 glass rounded-lg text-left hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium capitalize flex items-center gap-2">
-                          {section.label}
-                          <Play className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {sections.map((section) => {
+                  const isActive = currentSection?.id === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => handleSectionClick(section)}
+                      className={cn(
+                        "w-full p-3 glass rounded-lg text-left transition-all group",
+                        isActive 
+                          ? "bg-primary/20 border-primary/50 shadow-lg" 
+                          : "hover:bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <div className={cn(
+                            "font-medium capitalize flex items-center gap-2",
+                            isActive && "text-primary"
+                          )}>
+                            {section.label}
+                            {isActive && <span className="text-xs animate-pulse">●</span>}
+                            {!isActive && <Play className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatTime(section.start_ms)} - {formatTime(section.end_ms)}
+                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatTime(section.start_ms)} - {formatTime(section.end_ms)}
+                          {formatDuration(section.end_ms - section.start_ms)}
                         </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDuration(section.end_ms - section.start_ms)}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                      
+                      {/* Show chords for this section */}
+                      {section.chords && section.chords.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap mt-2">
+                          {section.chords.map((chord, i) => {
+                            const isCurrentChord = isActive && currentChordIndex === i;
+                            return (
+                              <ChordBadge
+                                key={i}
+                                chord={chord}
+                                keySignature={track.detected_key}
+                                size="sm"
+                                className={cn(
+                                  "transition-all duration-200",
+                                  isCurrentChord && "ring-2 ring-primary scale-110 shadow-lg"
+                                )}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </Card>
           </TabsContent>

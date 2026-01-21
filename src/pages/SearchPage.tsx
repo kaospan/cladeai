@@ -6,12 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { seedTracks, progressionArchetypes } from '@/data/seedTracks';
 import { Track } from '@/types';
-import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink, Loader2 } from 'lucide-react';
+import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink, Loader2, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { openProviderLink, getProviderLinks } from '@/lib/providers';
 import { useAuth } from '@/hooks/useAuth';
 import { searchSpotify } from '@/services/spotifySearchService';
 import { useSpotifyConnected } from '@/hooks/api/useSpotifyUser';
+import { 
+  getSearchHistory, 
+  addToSearchHistory, 
+  removeFromHistory, 
+  type SearchHistoryItem 
+} from '@/lib/searchHistory';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -21,6 +27,7 @@ export default function SearchPage() {
   const [searchMode, setSearchMode] = useState<'song' | 'chord'>('song');
   const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
   // Debounced Spotify search
   useEffect(() => {
@@ -77,8 +84,33 @@ export default function SearchPage() {
   }, [query, searchMode]);
 
   const handlePlayOnProvider = (track: Track) => {
-    // Navigate to track detail page instead of opening external link
+    // Add to search history
+    if (query.trim()) {
+      addToSearchHistory({
+        query: query.trim(),
+        type: searchMode,
+        track: searchMode === 'song' ? track : undefined,
+      });
+      setSearchHistory(getSearchHistory());
+    }
+    
+    // Navigate to track detail page
     navigate(`/track/${encodeURIComponent(track.id)}`);
+  };
+
+  const handleRemoveHistory = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeFromHistory(id);
+    setSearchHistory(getSearchHistory());
+  };
+
+  const handleHistoryClick = (item: SearchHistoryItem) => {
+    if (item.track) {
+      navigate(`/track/${encodeURIComponent(item.track.id)}`);
+    } else {
+      setQuery(item.query);
+      setSearchMode(item.type);
+    }
   };
 
   return (
@@ -130,6 +162,60 @@ export default function SearchPage() {
 
       {/* Content */}
       <main className="px-4 py-4 max-w-lg mx-auto space-y-6">
+        {/* Recent Searches - Show when no active search */}
+        {!query && searchHistory.length > 0 && (
+          <section>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Recent Searches
+            </h2>
+            <div className="space-y-2">
+              {searchHistory.slice(0, 10).map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  onClick={() => handleHistoryClick(item)}
+                  className="p-3 glass rounded-lg cursor-pointer hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                      {item.type === 'song' ? (
+                        <Music className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      {item.track ? (
+                        <>
+                          <div className="font-medium truncate">{item.track.title}</div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {item.track.artist}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="font-medium">{item.query}</div>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleRemoveHistory(item.id, e)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Quick chord searches */}
         {searchMode === 'chord' && !query && (
           <section>
