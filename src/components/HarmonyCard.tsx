@@ -55,7 +55,7 @@ export function HarmonyCard({
               <ChordBadge 
                 chord={chord} 
                 size="md" 
-                keySignature={track.detected_key}
+                keySignature={detectedKey}
               />
             </motion.div>
           ))}
