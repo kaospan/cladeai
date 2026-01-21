@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **REBRAND TO CLADE** — Simplified brand name from "CladeAI" to "Clade"
+  - New tagline: "Find Your Harmony"
+  - Updated all documentation (README, docs, TASKS, CHANGELOG)
+  - Changed base path from `/cladeai/` to `/clade/`
+  - Updated localStorage key to `clade_search_history`
+  - New meta tags: "Clade - Find Your Harmony"
+  - Cleaner, more memorable brand identity
+  - Modern, tech-forward feel that scales well
+
 ### Added
 - Harmonic analysis architecture with relative theory-first approach
 - Hybrid analysis pipeline (cache → async job → ML processing)
