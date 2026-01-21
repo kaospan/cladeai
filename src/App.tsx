@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PlayerProvider } from "@/player/PlayerContext";
 import { YouTubePlayerProvider } from "@/contexts/YouTubePlayerContext";
 import { FloatingPlayersProvider } from "@/contexts/FloatingPlayersContext";
+import { QueueProvider } from "@/contexts/QueueContext";
 import { EmbeddedPlayerDrawer } from "@/player/EmbeddedPlayerDrawer";
 import { LoadingSpinner } from "@/components/shared";
 
@@ -40,7 +41,8 @@ const App = () => (
       <AuthProvider>
         <YouTubePlayerProvider>
           <FloatingPlayersProvider>
-            <PlayerProvider>
+            <QueueProvider>
+              <PlayerProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter basename="/cladeai">
@@ -64,11 +66,12 @@ const App = () => (
                 <EmbeddedPlayerDrawer />
               </BrowserRouter>
             </PlayerProvider>
-          </FloatingPlayersProvider>
-        </YouTubePlayerProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </QueueProvider>
+        </FloatingPlayersProvider>
+      </YouTubePlayerProvider>
+    </AuthProvider>
+  </TooltipProvider>
+</QueryClientProvider>
 );
 
 export default App;

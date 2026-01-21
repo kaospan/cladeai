@@ -331,13 +331,53 @@ export default function TrackDetailPage() {
               )}
             </div>
             
-            {track.detected_key && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Key:</span>
-                <span className="font-medium">
-                  {track.detected_key} {track.detected_mode}
-                </span>
+            {/* Music Metadata */}
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              {track.detected_key && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Key:</span>
+                  <span className="font-medium">
+                    {track.detected_key} {track.detected_mode}
+                  </span>
+                </div>
+              )}
+              
+              {track.tempo && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground">BPM:</span>
+                  <span className="font-medium">{Math.round(track.tempo)}</span>
+                </div>
+              )}
+              
+              {track.genre && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground">Genre:</span>
+                  <span className="font-medium capitalize">{track.genre}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Genre Tags */}
+            {track.genres && track.genres.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {track.genres.map((genre, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                  >
+                    {genre}
+                  </span>
+                ))}
               </div>
+            )}
+            
+            {/* Genre Description */}
+            {track.genre_description && (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {track.genre_description}
+              </p>
             )}
 
             {/* Play Controls */}
@@ -469,7 +509,7 @@ export default function TrackDetailPage() {
                       
                       {/* Show chords for this section */}
                       {section.chords && section.chords.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap mt-2">
+                        <div className="flex gap-2 flex-wrap mt-2">
                           {section.chords.map((chord, i) => {
                             const isCurrentChord = isActive && currentChordIndex === i;
                             return (
@@ -477,7 +517,7 @@ export default function TrackDetailPage() {
                                 key={i}
                                 chord={chord}
                                 keySignature={track.detected_key}
-                                size="sm"
+                                size="lg"
                                 className={cn(
                                   "transition-all duration-200",
                                   isCurrentChord && "ring-2 ring-primary scale-110 shadow-lg"
@@ -507,12 +547,13 @@ export default function TrackDetailPage() {
               </div>
               {track.progression_roman && track.progression_roman.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2.5 flex-wrap">
                     {track.progression_roman.map((chord, i) => (
                       <ChordBadge 
                         key={i} 
                         chord={chord} 
                         keySignature={track.detected_key}
+                        size="lg"
                       />
                     ))}
                   </div>

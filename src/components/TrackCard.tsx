@@ -9,6 +9,7 @@ import { QuickStreamButtons } from './QuickStreamButtons';
 import { YouTubeEmbed } from './YouTubeEmbed';
 import { SongSections } from './SongSections';
 import { CompactSongSections } from './CompactSongSections';
+import { TrackMenu } from './TrackMenu';
 import { Button } from '@/components/ui/button';
 import { Track, InteractionType, TrackSection, SongSection } from '@/types';
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -237,15 +238,18 @@ export function TrackCard({
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-end p-6 pb-8 space-y-4">
-        {/* Track info */}
+        {/* Track info with menu */}
         <div className="space-y-2">
-          <motion.h2
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-2xl font-bold text-foreground line-clamp-2"
-          >
-            {track.title}
-          </motion.h2>
+          <div className="flex items-start justify-between gap-2">
+            <motion.h2
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="text-2xl font-bold text-foreground line-clamp-2 flex-1"
+            >
+              {track.title}
+            </motion.h2>
+            <TrackMenu track={track} />
+          </div>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

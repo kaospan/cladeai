@@ -96,6 +96,12 @@ export interface Track {
   energy?: number;
   danceability?: number;
   valence?: number;
+  tempo?: number; // BPM
+  
+  // Genre and style
+  genre?: string;
+  genres?: string[]; // Multiple genre tags
+  genre_description?: string;
   
   // Metadata
   popularity_score?: number;
