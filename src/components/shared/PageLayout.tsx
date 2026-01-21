@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { BottomNav } from '@/components/BottomNav';
+import { CladeLogoAnimated } from '@/components/icons/CladeIcon';
 
 interface PageLayoutProps {
   /** Page title shown in header */

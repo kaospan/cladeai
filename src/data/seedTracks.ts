@@ -72,6 +72,7 @@ export const seedTracks: SeedTrack[] = [
     genre: 'soul',
     genres: ['soul', 'pop ballad', 'piano'],
     genre_description: 'A heartfelt piano ballad with powerful vocals and emotional depth, featuring stripped-down production.',
+    is_common_ancestor: true,
     songwriter: 'Adele, Dan Wilson',
     producer: 'Dan Wilson',
     label: 'XL Recordings, Columbia',
@@ -155,6 +156,7 @@ export const seedTracks: SeedTrack[] = [
     genre: 'synth-pop',
     genres: ['synth-pop', 'new wave', '80s'],
     genre_description: 'An iconic 80s synth-pop anthem featuring soaring vocals, bright synthesizers, and uplifting melodies.',
+    is_common_ancestor: true,
     spotify_id: '2WfaOiMkCvy7F5fcp2zZ8L',
     youtube_id: 'djV11Xbc914',
     url_spotify_web: 'https://open.spotify.com/track/2WfaOiMkCvy7F5fcp2zZ8L',
@@ -194,6 +196,7 @@ export const seedTracks: SeedTrack[] = [
     genre: 'pop',
     genres: ['pop', 'funk', 'disco'],
     genre_description: 'A legendary pop-funk track with a hypnotic bassline, tight drum groove, and smooth vocal delivery.',
+    is_common_ancestor: true,
     sections: [
       { type: 'intro', start_time: 0, end_time: 29, label: 'Intro (16 bars)' },
       { type: 'verse', start_time: 29, end_time: 58, label: 'Verse 1 (16 bars)' },

@@ -81,6 +81,7 @@ export interface Track {
   
   // Song structure data
   sections?: SongSection[]; // Array of song sections with timestamps
+  is_common_ancestor?: boolean; // Marks foundational/influential tracks that spawned musical movements
   
   // Harmonic fingerprint data
   detected_key?: string;

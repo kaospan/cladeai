@@ -11,6 +11,7 @@ import { SongSections } from './SongSections';
 import { CompactSongSections } from './CompactSongSections';
 import { TrackMenu } from './TrackMenu';
 import { Button } from '@/components/ui/button';
+import { AncestorBadge } from '@/components/icons/CladeIcon';
 import { Track, InteractionType, TrackSection, SongSection } from '@/types';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -244,9 +245,18 @@ export function TrackCard({
             <motion.h2
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="text-2xl font-bold text-foreground line-clamp-2 flex-1"
+              className="text-2xl font-bold text-foreground line-clamp-2 flex-1 flex items-center gap-2"
             >
-              {track.title}
+              <span>{track.title}</span>
+              {track.is_common_ancestor && (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30"
+                  title="Common Ancestor - Foundational track that influenced a musical movement"
+                >
+                  <AncestorBadge size={14} className="text-amber-400" />
+                  <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Ancestor</span>
+                </span>
+              )}
             </motion.h2>
             <TrackMenu track={track} />
           </div>
