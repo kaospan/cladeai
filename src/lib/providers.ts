@@ -72,42 +72,10 @@ export function getProviderLinks(track: TrackProviderInfo): ProviderLink[] {
   return links;
 }
 
-// Open provider link (tries app first, falls back to web)
-export function openProviderLink(link: ProviderLink, preferApp = true): void {
-  if (preferApp && link.appUrl) {
-    // Try to open app using a hidden iframe to keep focus on the page
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = link.appUrl;
-    document.body.appendChild(iframe);
-    
-    // Clean up iframe after a short delay
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 2000);
-    
-    // Optional: If app doesn't open, fallback to web (but keep focus)
-    setTimeout(() => {
-      if (document.hasFocus()) {
-        // App didn't open, user is still on page
-        // Open web link in background (for Spotify web player, use iframe approach)
-        if (link.provider === 'spotify') {
-          // For Spotify, we keep it in background without popup
-          const webIframe = document.createElement('iframe');
-          webIframe.style.display = 'none';
-          webIframe.src = link.webUrl;
-          document.body.appendChild(webIframe);
-          setTimeout(() => document.body.removeChild(webIframe), 3000);
-        } else {
-          // For other providers, open in new tab but don't switch focus
-          window.open(link.webUrl, '_blank', 'noopener,noreferrer');
-        }
-      }
-    }, 1500);
-  } else {
-    // Open web link in new tab
-    window.open(link.webUrl, '_blank', 'noopener,noreferrer');
-  }
+// Open provider link - opens web player directly
+export function openProviderLink(link: ProviderLink, preferApp = false): void {
+  // Always open web link in new tab - this opens Spotify web player immediately
+  window.open(link.webUrl, '_blank', 'noopener,noreferrer');
 }
 
 // Provider display info

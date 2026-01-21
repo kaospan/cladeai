@@ -47,7 +47,8 @@ export function QuickStreamButtons({
     if (link) {
       // Remember this as the preferred provider
       setPreferredProvider(provider);
-      openProviderLink(link, provider === 'spotify');
+      // Always open web player (preferApp = false)
+      openProviderLink(link, false);
     }
   };
 
