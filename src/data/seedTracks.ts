@@ -237,6 +237,7 @@ export const seedTracks: SeedTrack[] = [
     genre: 'rock',
     genres: ['rock', 'progressive rock', 'opera rock'],
     genre_description: 'An epic rock opera featuring multiple movements, from ballad to hard rock, showcasing theatrical vocals and complex arrangements.',
+    is_common_ancestor: true,
     spotify_id: '7tFiyTwD0nx5a1eklYtX2J',
     youtube_id: 'fJ9rUzIMcZQ',
     url_spotify_web: 'https://open.spotify.com/track/7tFiyTwD0nx5a1eklYtX2J',
