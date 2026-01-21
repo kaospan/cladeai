@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ChordBadge } from '@/components/ChordBadge';
 import { SpotifyIcon } from '@/components/QuickStreamButtons';
 import { PageLayout, EmptyState, LoadingSpinner } from '@/components/shared';
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -217,6 +218,7 @@ export default function ProfilePage() {
         </Button>
       }
     >
+      <ResponsiveContainer maxWidth="2xl" className="space-y-6">
       {/* User info - Enhanced with Spotify profile */}
       <motion.div
         variants={fadeInUp}
@@ -733,13 +735,14 @@ export default function ProfilePage() {
             </div>
 
             <Tabs defaultValue="tracks" className="w-full">
-              <TabsList className="w-full">
-                <TabsTrigger value="tracks" className="flex-1">Top Tracks</TabsTrigger>
-                <TabsTrigger value="artists" className="flex-1">Top Artists</TabsTrigger>
-                <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="tracks">Top Tracks</TabsTrigger>
+                <TabsTrigger value="artists">Top Artists</TabsTrigger>
+                <TabsTrigger value="recent">Recent</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="tracks" className="mt-4 space-y-2">
+              <TabsContent value="tracks" className="mt-4">
+                <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 3 }} gap="sm">
                 {topTracks.map((track, i) => (
                   <div key={track.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30">
                     <span className="w-6 text-center text-muted-foreground text-sm">{i + 1}</span>
@@ -758,12 +761,14 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 ))}
+                </ResponsiveGrid>
                 {topTracks.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No top tracks yet</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">No top tracks yet. Connect Spotify to see your music!</p>
                 )}
               </TabsContent>
 
-              <TabsContent value="artists" className="mt-4 space-y-2">
+              <TabsContent value="artists" className="mt-4">
+                <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 3 }} gap="sm">
                 {topArtists.map((artist, i) => (
                   <div key={artist.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30">
                     <span className="w-6 text-center text-muted-foreground text-sm">{i + 1}</span>
@@ -784,12 +789,14 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 ))}
+                </ResponsiveGrid>
                 {topArtists.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No top artists yet</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">No top artists yet. Start listening!</p>
                 )}
               </TabsContent>
 
-              <TabsContent value="recent" className="mt-4 space-y-2">
+              <TabsContent value="recent" className="mt-4">
+                <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 3 }} gap="sm">
                 {recentlyPlayed?.tracks?.map((track) => (
                   <div key={track.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30">
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
@@ -806,9 +813,17 @@ export default function ProfilePage() {
                       <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                     </div>
                   </div>
-                )) ?? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No recent plays</p>
+                ))}
+                </ResponsiveGrid>
+                {(!recentlyPlayed?.tracks || recentlyPlayed.tracks.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-8">No recent plays. Start listening now!</p>
                 )}
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        )}
+
+        {/* Recommendations */}
               </TabsContent>
             </Tabs>
           </motion.div>
@@ -1021,6 +1036,7 @@ export default function ProfilePage() {
             <span className="text-xs text-muted-foreground">{savesCount} songs</span>
           </button>
         </motion.div>
+      </ResponsiveContainer>
     </PageLayout>
   );
 }

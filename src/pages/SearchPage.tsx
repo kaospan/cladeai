@@ -48,12 +48,12 @@ export default function SearchPage() {
       } finally {
         setIsSearching(false);
       }
-    }, 500); // 500ms debounce
+    }, 300); // 300ms debounce for instant feel
 
     return () => clearTimeout(timer);
   }, [query, searchMode, user, isSpotifyConnected]);
 
-  // Real-time search results (local seed tracks)
+  // Instant local search with memoization for zero-latency feel
   const results = useMemo(() => {
     if (!query.trim()) return [];
 
