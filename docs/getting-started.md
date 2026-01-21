@@ -27,9 +27,9 @@
    - Get Spotify keys from your Spotify Developer Dashboard.
    - For production:
      ```
-     VITE_SPOTIFY_REDIRECT_URI=https://repoisrael.github.io/cladeai/callback/spotify
+     VITE_SPOTIFY_REDIRECT_URI=https://repoisrael.github.io/cladeai/spotify-callback
      ```
    - For local development:
      ```
-     VITE_SPOTIFY_REDIRECT_URI=http://localhost:8080/spotify-callback
+     VITE_SPOTIFY_REDIRECT_URI=http://localhost:5173/spotify-callback
      ```
