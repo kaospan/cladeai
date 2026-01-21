@@ -6,9 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { seedTracks, progressionArchetypes } from '@/data/seedTracks';
 import { Track } from '@/types';
-import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink } from 'lucide-react';
+import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { openProviderLink, getProviderLinks } from '@/lib/providers';
+import { useAuth } from '@/hooks/useAuth';
+import { searchSpotify } from '@/services/spotifySearchService';
+import { useSpotifyConnected } from '@/hooks/api/useSpotifyUser';
 
 export default function SearchPage() {
   const navigate = useNavigate();
