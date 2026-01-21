@@ -534,8 +534,11 @@ export default function TrackDetailPage() {
           <TabsContent value="videos" className="space-y-3">
             <Card className="p-4">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-                Available Videos
+                Video Sources
               </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Click the Play button above to start playback. Video player continues across navigation.
+              </p>
               <div className="space-y-2">
                 {loadingVideos ? (
                   <div className="text-center py-8">
