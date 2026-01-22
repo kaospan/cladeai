@@ -271,6 +271,40 @@ export default function SearchPage() {
           </section>
         )}
 
+        {/* No results message */}
+        {query && spotifyResults.length === 0 && results.length === 0 && !isSearching && (
+          <section>
+            <div className="glass rounded-xl p-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                <Search className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">No results found for "{query}"</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Local database has only {seedTracks.length} tracks with chord progressions.
+                </p>
+              </div>
+              {!isSpotifyConnected && (
+                <div className="glass-strong rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-[#1DB954]">
+                    <ExternalLink className="w-5 h-5" />
+                    <span className="font-semibold">Connect Spotify for unlimited search</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Access millions of songs by connecting your Spotify account
+                  </p>
+                  <Button
+                    onClick={() => navigate('/profile')}
+                    className="w-full bg-[#1DB954] hover:bg-[#1ed760] text-white"
+                  >
+                    Connect Spotify
+                  </Button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Search results */}
         {(spotifyResults.length > 0 || results.length > 0) && (
           <section>
