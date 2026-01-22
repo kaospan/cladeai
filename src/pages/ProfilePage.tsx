@@ -26,6 +26,7 @@ import {
   BarChart3,
   Disc3,
   X,
+  Shield,
 } from 'lucide-react';
 import { usePlayHistory, usePlayStats } from '@/hooks/api/usePlayEvents';
 import { useProfile, useUserProviders, useSetPreferredProvider } from '@/hooks/api/useProfile';
@@ -47,6 +48,7 @@ import {
   useDisconnectLastFm,
 } from '@/hooks/api/useLastFm';
 import { useTasteDNA } from '@/hooks/api/useTasteDNA';
+import { useIsAdmin } from '@/hooks/api/useAdmin';
 import { PROVIDER_INFO } from '@/lib/providers';
 import { MusicProvider } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -116,6 +118,9 @@ export default function ProfilePage() {
   
   // Taste DNA - real user data
   const { data: tasteDNA, isLoading: isTasteDNALoading } = useTasteDNA();
+  
+  // Admin check
+  const { data: isAdmin } = useIsAdmin();
 
   const spotifyConnected = isSpotifyConnected === true;
   const lastFmConnected = !!lastFmUsername;
@@ -202,9 +207,22 @@ export default function ProfilePage() {
     <PageLayout
       title="Profile"
       headerActions={
-        <Button variant="ghost" size="icon" onClick={handleSignOut}>
-          <LogOut className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/admin')}
+              className="text-xs gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
       }
     >
       <ResponsiveContainer maxWidth="2xl" className="space-y-6">

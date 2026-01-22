@@ -24,7 +24,11 @@ const SpotifyCallbackPage = lazy(() => import("./pages/SpotifyCallbackPage"));
 const AlbumPage = lazy(() => import("./pages/AlbumPage"));
 const ArtistPage = lazy(() => import("./pages/ArtistPage"));
 const TrackDetailPage = lazy(() => import("./pages/TrackDetailPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Admin route wrapper
+import { AdminRoute } from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +63,10 @@ const App = () => (
                     <Route path="/album/:albumId" element={<AlbumPage />} />
                     <Route path="/artist/:artistId" element={<ArtistPage />} />
                     <Route path="/track/:trackId" element={<TrackDetailPage />} />
+                    {/* Admin routes */}
+                    <Route element={<AdminRoute />}>
+                      <Route path="/admin" element={<AdminDashboard />} />
+                    </Route>
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
