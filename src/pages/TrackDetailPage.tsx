@@ -17,6 +17,7 @@ import { useYouTubePlayer } from '@/contexts/YouTubePlayerContext';
 import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
+import { TrackLineageView } from '@/components/TrackLineageView';
 import { getTrackSections } from '@/api/trackSections';
 import { searchYouTubeVideos, VideoResult } from '@/services/youtubeSearchService';
 import { TrackSection, Track } from '@/types';
@@ -411,6 +412,13 @@ export default function TrackDetailPage() {
                     <span className="font-medium">Released:</span> {new Date(track.release_date).toLocaleDateString()}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Track Lineage - Musical DNA */}
+            {track.id && (
+              <div className="pt-4 border-t border-border/50">
+                <TrackLineageView trackId={track.id} />
               </div>
             )}
 

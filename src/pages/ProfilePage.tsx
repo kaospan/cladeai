@@ -46,6 +46,7 @@ import {
   useConnectLastFm,
   useDisconnectLastFm,
 } from '@/hooks/api/useLastFm';
+import { useTasteDNA } from '@/hooks/api/useTasteDNA';
 import { PROVIDER_INFO } from '@/lib/providers';
 import { MusicProvider } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -74,21 +75,6 @@ const moodEmojis: Record<string, string> = {
   melancholic: '🌙',
   upbeat: '☀️',
   balanced: '🎯',
-};
-
-// Mock taste DNA data (chord progressions)
-const tasteDNA = {
-  favoriteProgressions: [
-    { progression: ['vi', 'IV', 'I', 'V'], count: 42 },
-    { progression: ['I', 'V', 'vi', 'IV'], count: 38 },
-    { progression: ['i', 'VII', 'VI', 'VII'], count: 24 },
-  ],
-  preferredModes: [
-    { mode: 'minor', percentage: 58 },
-    { mode: 'major', percentage: 42 },
-  ],
-  energyPreference: 0.72,
-  cadencePreference: 'loop',
 };
 
 export default function ProfilePage() {
@@ -127,6 +113,9 @@ export default function ProfilePage() {
   const { data: lastFmStats } = useLastFmStats();
   const connectLastFm = useConnectLastFm();
   const disconnectLastFm = useDisconnectLastFm();
+  
+  // Taste DNA - real user data
+  const { data: tasteDNA, isLoading: isTasteDNALoading } = useTasteDNA();
 
   const spotifyConnected = isSpotifyConnected === true;
   const lastFmConnected = !!lastFmUsername;
