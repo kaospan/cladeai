@@ -2,6 +2,8 @@
 // Uses Track type directly for compatibility
 
 import { Track } from '@/types';
+import { historicalTracks } from './historicalTracks';
+import { additionalHistoricalTracks } from './additionalHistoricalTracks';
 
 export type SeedTrack = Track;
 
@@ -1472,6 +1474,12 @@ export const seedTracks: SeedTrack[] = [
     danceability: 0.80,
     valence: 0.65,
   },
+  
+  // Add all 114 historical tracks (1920s-2020s) from CSV
+  ...historicalTracks,
+  
+  // Add 20 additional hand-curated foundational tracks
+  ...additionalHistoricalTracks,
 ];
 
 // Progression archetypes for cold start / search

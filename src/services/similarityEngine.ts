@@ -287,7 +287,7 @@ async function getFingerprint(trackId: string): Promise<HarmonicFingerprint | nu
  * Check if progressions match with rotation
  * Example: [I, V, vi, IV] matches [vi, IV, I, V]
  */
-export function matchesWithRotation(
+function matchesWithRotation(
   a: RomanChord[],
   b: RomanChord[]
 ): boolean {

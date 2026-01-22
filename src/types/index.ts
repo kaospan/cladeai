@@ -83,6 +83,11 @@ export interface Track {
   sections?: SongSection[]; // Array of song sections with timestamps
   is_common_ancestor?: boolean; // Marks foundational/influential tracks that spawned musical movements
   
+  // Historical track metadata
+  historical_year?: number; // Original performance year
+  historical_decade?: string; // Original performance decade
+  historical_notes?: string; // Historical significance notes
+  
   // Harmonic fingerprint data
   detected_key?: string;
   detected_mode?: 'major' | 'minor' | 'unknown';

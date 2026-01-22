@@ -996,7 +996,7 @@ export default function ProfilePage() {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm truncate">{trackTitle}</h4>
                       <div className="flex items-center gap-2 mt-1">
-                        <ProviderBadge provider={event.provider} size="sm" />
+                        <ProviderBadge provider={event.provider as MusicProvider} size="sm" />
                         <span className="text-xs text-muted-foreground">
                           {formatRelativeTime(event.played_at)}
                         </span>
