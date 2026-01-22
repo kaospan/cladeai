@@ -240,3 +240,104 @@ Developers working on Next.js projects can use this prompt to build modular, typ
 ## Overview of  prompt
 The  file provides guidelines for developers specializing in technologies such as Solidity, TypeScript, Node.js, and React. It emphasizes writing concise and technical responses using accurate TypeScript examples while promoting functional and declarative programming styles. Key principles include favoring modularization over duplication, using descriptive variable names, and preferring named exports for components. The file outlines specific practices for JavaScript and TypeScript, such as using the "function" keyword for pure functions, leveraging TypeScript interfaces, and prioritizing error handling. It stipulates dependencies like Next.js 14, Wagmi v2, and Viem v2, and offers guidance on using React/Next.js with a focus on functional components, responsive design, and efficient error management. Additionally, it provides conventions for using server actions, data handling, and maintaining performance priorities like Web Vitals.
 
+🧠 GitHub Copilot Prompt — CladeAI (Architecture-First)
+
+You are working inside the CladeAI repository.
+
+Your top priority is to fully implement all outstanding TODOs and partially implemented systems that already exist in the codebase.
+Do NOT add new features, UI polish, or speculative ideas.
+
+🔴 Absolute Rules (Non-Negotiable)
+
+- Relative harmony is primary data
+- Store Roman numerals, tonal center, cadence type
+- Absolute chords/keys are UI-only
+- Never persist absolute chords as canonical data
+- Never block the UI
+- All analysis must be async
+- Immediate provisional results are allowed
+- Confidence must be explicit
+- Never fake results
+- If analysis is uncertain → mark is_provisional = true
+- If data is missing → return partials with low confidence
+- Silence is better than guessing
+- Respect existing architecture
+- Extend existing files before creating new ones
+- Follow the current folder structure
+- Do not collapse layers (analysis ≠ UI ≠ storage)
+
+🎯 PRIMARY OBJECTIVE
+
+Bring all outstanding TODO / 🚧 items to production-ready state, in this exact priority order:
+
+✅ PRIORITY 1 — Database Integration (CRITICAL)
+- Implement Supabase schema and persistence.
+- Create migrations for: harmonic_fingerprints, analysis_jobs
+- Add indexes for: roman_progression, cadence_type, loop_length_bars, confidence_score
+- Implement cache lookup logic: ISRC / audio hash deduplication, 90-day TTL reuse, 365-day reanalysis eligibility
+- Wire DB reads/writes into: src/services/harmonicAnalysis.ts
+- Ensure idempotency: same audio → same fingerprint
+- Output should include: SQL migration files, type-safe DB access, no breaking changes to UI
+
+✅ PRIORITY 2 — Background Analysis Pipeline (CRITICAL)
+- Implement non-blocking async analysis.
+- Create Supabase Edge Function for analysis jobs
+- Implement: queued → processing → completed / failed
+- Persist progress updates (0–1)
+- Ensure UI receives: Immediate provisional data, eventual refined result
+- Add model version tagging (analysis_version)
+- Do NOT: Run analysis on the main thread, assume analysis completes successfully
+
+✅ PRIORITY 3 — Audio / ML Analysis v0 (FOUNDATIONAL)
+- Implement a minimal but honest ML pipeline.
+- Scope (v0 only): Chroma feature extraction, tonal center detection, single dominant loop detection (e.g. chorus), Roman-numeral conversion
+- Confidence scoring based on: signal clarity, harmonic stability, section consistency
+- Allowed tools: Essentia.js (preferred), lightweight custom heuristics
+- Do NOT: Attempt full song segmentation, guess complex jazz/prog harmony, over-engineer embeddings yet
+
+✅ PRIORITY 4 — React Hook Completion
+- Complete: src/hooks/useHarmonicAnalysis.ts
+- Requirements: Subscribe to job status, reflect analyzing / provisional / high-confidence, support reanalysis trigger, handle failures gracefully, no polling abuse
+
+✅ PRIORITY 5 — Similarity Engine TODOs
+- Implement missing logic without ML embeddings yet.
+- Tasks: Progression rotation matching (I–V–vi–IV ≈ V–vi–IV–I), loop normalization
+- Explanation payload:
+  matching_features: {
+    shared_progression_shape: boolean
+    cadence_match?: string
+    rotation_offset?: number
+  }
+- Keep it deterministic and testable.
+
+🧪 CODE QUALITY REQUIREMENTS
+
+- Prefer pure functions
+- Add unit tests for: progression rotation, confidence thresholds, cache reuse logic
+- No hardcoded values — use ANALYSIS_CONFIG
+- Leave clear comments only where ambiguity exists
+
+🚫 WHAT NOT TO DO
+
+- No UI redesign
+- No new monetization logic
+- No speculative ML
+- No genre tagging
+- No “nice to have” features
+
+🧭 SUCCESS CRITERIA
+
+The system is considered complete when:
+- A song can be added
+- Cached or provisional harmony appears immediately
+- Background analysis refines it
+- Confidence updates correctly
+- Similar songs are explainably linked
+- No part of the UI waits on ML
+
+Build this as if the repo will be audited by both a music theorist and a systems architect.
+
+If something is ambiguous:
+- Choose correctness over completeness
+- Choose honesty over confidence
+- Choose architecture over speed
