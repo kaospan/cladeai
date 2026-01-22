@@ -14,6 +14,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTrack } from '@/hooks/api/useTracks';
 import { useYouTubePlayer } from '@/contexts/YouTubePlayerContext';
+import { usePlayer } from '@/player/PlayerContext';
 import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
@@ -40,6 +41,7 @@ export default function TrackDetailPage() {
   const navigate = useNavigate();
   const { data: track, isLoading } = useTrack(decodeURIComponent(trackId || ''));
   const { playVideo, currentVideo, currentTime, seekTo } = useYouTubePlayer();
+  const { openPlayer } = usePlayer();
   
   const [sections, setSections] = useState<TrackSection[]>([]);
   const [hooktheoryData, setHooktheoryData] = useState<any>(null);
@@ -257,10 +259,22 @@ export default function TrackDetailPage() {
   }
 
   function handleSectionClick(section: TrackSection) {
-    if (!activeVideoId || !track?.artist || !track?.title) return;
-    
     const startSeconds = Math.floor(section.start_ms / 1000);
-    seekTo(startSeconds);
+    
+    // Always play sections on YouTube
+    if (track?.youtube_id) {
+      openPlayer({
+        provider: 'youtube',
+        providerTrackId: track.youtube_id,
+        canonicalTrackId: track.id,
+        autoplay: true,
+        startSec: startSeconds,
+        context: 'section_navigation',
+      });
+    } else if (activeVideoId) {
+      // Fallback to YouTube player context if no youtube_id
+      seekTo(startSeconds);
+    }
   }
 
   function handlePlayVideo(video: VideoSource) {
@@ -423,34 +437,43 @@ export default function TrackDetailPage() {
               </div>
             )}
 
-            {/* Play Controls */}
-            <div className="flex gap-2 pt-2">
-              {currentVideo && (
+            {/* Play Controls - Clickable Provider Icons */}
+            <div className="flex gap-3 pt-2">
+              {track.youtube_id && (
                 <Button
+                  size="lg"
                   onClick={() => {
-                    if (activeVideoId) {
-                      playVideo({
-                        videoId: activeVideoId,
-                        title: track.title,
-                        artist: track.artist,
-                        startSeconds: 0,
-                      });
-                    }
+                    openPlayer({
+                      provider: 'youtube',
+                      providerTrackId: track.youtube_id!,
+                      canonicalTrackId: track.id,
+                      autoplay: true,
+                      context: 'track_detail',
+                    });
                   }}
-                  className="flex-1"
+                  className="flex-1 gap-2"
                 >
-                  <Play className="w-4 h-4 mr-2" />
+                  <span className="text-xl">▶</span>
                   Play on YouTube
                 </Button>
               )}
-              {track.url_spotify_web && (
+              {track.spotify_id && (
                 <Button
+                  size="lg"
                   variant="outline"
-                  onClick={() => window.open(track.url_spotify_web, '_blank')}
-                  className="flex-1"
+                  onClick={() => {
+                    openPlayer({
+                      provider: 'spotify',
+                      providerTrackId: track.spotify_id!,
+                      canonicalTrackId: track.id,
+                      autoplay: true,
+                      context: 'track_detail',
+                    });
+                  }}
+                  className="flex-1 gap-2"
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Open in Spotify
+                  <span className="text-xl">🎧</span>
+                  Play on Spotify
                 </Button>
               )}
             </div>
