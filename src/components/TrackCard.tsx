@@ -212,16 +212,17 @@ export function TrackCard({
       <div className="absolute inset-0 z-0">
         {showYouTubeEmbed && track.youtube_id && !isPipActive ? (
           // YouTube embed as background when Watch button is active
-          <div className="w-full h-full">
+          <div className="w-full h-full relative">
             <iframe
-              src={`https://www.youtube.com/embed/${track.youtube_id}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${track.youtube_id}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&fs=1&iv_load_policy=3`}
               title={`${track.title} - ${track.artist}`}
               className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
+            {/* Gradient overlay - only covers bottom portion, doesn't block video controls */}
+            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-background/90 via-background/50 to-transparent pointer-events-none" />
           </div>
         ) : track.cover_url ? (
           <>
@@ -385,9 +386,9 @@ export function TrackCard({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center justify-between pt-4"
+          className="flex items-center justify-between pt-4 relative z-20"
         >
-          {/* Skip */}
+          {/* Skip - always clickable */}
           <ActionButton
             icon={X}
             label="Skip"

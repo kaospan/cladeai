@@ -54,6 +54,7 @@ export function QuickStreamButtons({
     if (track.spotifyId) {
       setPreferredProvider('spotify');
       playSpotify(track.spotifyId, trackTitle, trackArtist);
+      // Don't close YouTube - allow both to be open
     }
   }, [track.spotifyId, trackTitle, trackArtist, playSpotify]);
 
@@ -61,6 +62,7 @@ export function QuickStreamButtons({
     if (track.youtubeId) {
       setPreferredProvider('youtube');
       playYouTube(track.youtubeId, trackTitle, trackArtist);
+      // Don't close Spotify - allow both to be open
     }
   }, [track.youtubeId, trackTitle, trackArtist, playYouTube]);
 
