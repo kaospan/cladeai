@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
 import { HarmonyCard } from '@/components/HarmonyCard';
+import { LineagePath } from '@/components/TrackLineageView';
 import { seedTracks } from '@/data/seedTracks';
 import { Track } from '@/types';
 import { ArrowLeftRight, Check, Sparkles, Music, Key, RotateCcw } from 'lucide-react';
@@ -298,6 +299,11 @@ export default function ComparePage() {
                 )}
               </div>
             </div>
+
+            {/* Lineage Path - show if tracks are connected */}
+            {trackA.id && trackB.id && (
+              <LineagePath startId={trackA.id} endId={trackB.id} />
+            )}
           </motion.div>
         )}
 
