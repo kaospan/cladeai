@@ -159,9 +159,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const nextTrack = useCallback(() => {
     setState((prev) => {
-      if (prev.queueIndex >= prev.queue.length - 1) return prev;
+      if (prev.queue.length === 0) return prev;
       
-      const nextIndex = prev.queueIndex + 1;
+      // Loop to first track if at the end
+      const nextIndex = prev.queueIndex >= prev.queue.length - 1 ? 0 : prev.queueIndex + 1;
       const track = prev.queue[nextIndex];
       if (!track) return prev;
 
@@ -182,9 +183,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const previousTrack = useCallback(() => {
     setState((prev) => {
-      if (prev.queueIndex <= 0) return prev;
+      if (prev.queue.length === 0) return prev;
       
-      const prevIndex = prev.queueIndex - 1;
+      // Loop to last track if at the beginning
+      const prevIndex = prev.queueIndex <= 0 ? prev.queue.length - 1 : prev.queueIndex - 1;
       const track = prev.queue[prevIndex];
       if (!track) return prev;
 

@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { seedTracks, progressionArchetypes } from '@/data/seedTracks';
 import { Track } from '@/types';
-import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink, Loader2, Clock, X } from 'lucide-react';
+import { Search, Music, TrendingUp, ArrowRight, Play, ExternalLink, Loader2, Clock, X, Filter, Zap, Heart, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { openProviderLink, getProviderLinks } from '@/lib/providers';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +30,10 @@ export default function SearchPage() {
   const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [energyFilter, setEnergyFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [moodFilter, setMoodFilter] = useState<'all' | 'happy' | 'sad' | 'neutral'>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Debug: Log seedTracks on mount
   useEffect(() => {
@@ -62,19 +67,72 @@ export default function SearchPage() {
 
   // Instant local search with memoization for zero-latency feel
   const results = useMemo(() => {
-    if (!query.trim()) return [];
+    let filtered: Track[] = [];
 
+    // Step 1: Text search filtering
     if (searchMode === 'song') {
-      // Search by song/artist/album
       const lowerQuery = query.toLowerCase();
-      const filtered = seedTracks.filter(
+      filtered = seedTracks.filter(
         (t) =>
+          !query.trim() || // Include all if no query
           t.title?.toLowerCase().includes(lowerQuery) ||
           t.artist?.toLowerCase().includes(lowerQuery) ||
-          t.album?.toLowerCase().includes(lowerQuery)
+          t.album?.toLowerCase().includes(lowerQuery) ||
+          t.genre?.toLowerCase().includes(lowerQuery) ||
+          t.genre_description?.toLowerCase().includes(lowerQuery)
       );
+    } else {
+      // Chord progression search
+      const chords = query
+        .toUpperCase()
+        .split(/[-–—,\s]+/)
+        .map((c) => c.trim())
+        .filter(Boolean);
       
-      // Sort by relevance: exact title match first, then artist, then album
+      filtered = seedTracks.filter((t) => {
+        if (!t.progression_roman) return false;
+        const progression = t.progression_roman.map((c) => c.toUpperCase());
+        return chords.length === 0 || chords.every((chord) => 
+          progression.includes(chord) || progression.includes(chord.toLowerCase())
+        );
+      });
+    }
+
+    // Step 2: Genre filtering
+    if (selectedGenres.length > 0) {
+      filtered = filtered.filter((t) => {
+        const trackGenres = [t.genre, ...(t.genres || [])].filter(Boolean).map(g => g?.toLowerCase());
+        return selectedGenres.some(selectedGenre => 
+          trackGenres.some(tg => tg?.includes(selectedGenre.toLowerCase()))
+        );
+      });
+    }
+
+    // Step 3: Energy filtering (high: >0.7, medium: 0.4-0.7, low: <0.4)
+    if (energyFilter !== 'all') {
+      filtered = filtered.filter((t) => {
+        if (typeof t.energy !== 'number') return false;
+        if (energyFilter === 'high') return t.energy > 0.7;
+        if (energyFilter === 'medium') return t.energy >= 0.4 && t.energy <= 0.7;
+        if (energyFilter === 'low') return t.energy < 0.4;
+        return true;
+      });
+    }
+
+    // Step 4: Mood filtering (happy: valence >0.6, sad: <0.4, neutral: 0.4-0.6)
+    if (moodFilter !== 'all') {
+      filtered = filtered.filter((t) => {
+        if (typeof t.valence !== 'number') return false;
+        if (moodFilter === 'happy') return t.valence > 0.6;
+        if (moodFilter === 'sad') return t.valence < 0.4;
+        if (moodFilter === 'neutral') return t.valence >= 0.4 && t.valence <= 0.6;
+        return true;
+      });
+    }
+
+    // Step 5: Sort by relevance
+    if (query.trim() && searchMode === 'song') {
+      const lowerQuery = query.toLowerCase();
       return filtered.sort((a, b) => {
         const aTitle = a.title?.toLowerCase() || '';
         const bTitle = b.title?.toLowerCase() || '';
@@ -88,23 +146,10 @@ export default function SearchPage() {
         
         return 0;
       });
-    } else {
-      // Search by chord progression
-      const chords = query
-        .toUpperCase()
-        .split(/[-–—,\s]+/)
-        .map((c) => c.trim())
-        .filter(Boolean);
-      
-      return seedTracks.filter((t) => {
-        if (!t.progression_roman) return false;
-        const progression = t.progression_roman.map((c) => c.toUpperCase());
-        return chords.every((chord) => 
-          progression.includes(chord) || progression.includes(chord.toLowerCase())
-        );
-      });
     }
-  }, [query, searchMode]);
+
+    return filtered;
+  }, [query, searchMode, selectedGenres, energyFilter, moodFilter]);
 
   const handlePlayOnProvider = (track: Track) => {
     // Add to search history
@@ -186,6 +231,123 @@ export default function SearchPage() {
               autoFocus
             />
           </div>
+
+          {/* Filter toggle button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filters
+            {(selectedGenres.length > 0 || energyFilter !== 'all' || moodFilter !== 'all') && (
+              <Badge variant="secondary" className="ml-2">
+                {selectedGenres.length + (energyFilter !== 'all' ? 1 : 0) + (moodFilter !== 'all' ? 1 : 0)}
+              </Badge>
+            )}
+          </Button>
+
+          {/* Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4 pt-2">
+                  {/* Genre filters */}
+                  <div>
+                    <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Music className="w-4 h-4" />
+                      Genre
+                      {selectedGenres.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedGenres([])}
+                          className="h-6 text-xs"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {['pop', 'rock', 'hip hop', 'r&b', 'jazz', 'funk', 'soul', 'blues', 'country', 'disco', 'synthpop', 'reggae', 'punk'].map((genre) => (
+                        <Badge
+                          key={genre}
+                          variant={selectedGenres.includes(genre) ? 'default' : 'outline'}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setSelectedGenres(prev =>
+                              prev.includes(genre)
+                                ? prev.filter(g => g !== genre)
+                                : [...prev, genre]
+                            );
+                          }}
+                        >
+                          {genre}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Energy filter */}
+                  <div>
+                    <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      Energy
+                    </div>
+                    <div className="flex gap-2">
+                      {[
+                        { value: 'all', label: 'All' },
+                        { value: 'high', label: 'High Energy' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'low', label: 'Chill' },
+                      ].map((option) => (
+                        <Badge
+                          key={option.value}
+                          variant={energyFilter === option.value ? 'default' : 'outline'}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setEnergyFilter(option.value as any)}
+                        >
+                          {option.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mood filter */}
+                  <div>
+                    <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Heart className="w-4 h-4" />
+                      Mood
+                    </div>
+                    <div className="flex gap-2">
+                      {[
+                        { value: 'all', label: 'All', icon: Sparkles },
+                        { value: 'happy', label: 'Happy', icon: '😊' },
+                        { value: 'neutral', label: 'Neutral', icon: '😐' },
+                        { value: 'sad', label: 'Melancholic', icon: '😢' },
+                      ].map((option) => (
+                        <Badge
+                          key={option.value}
+                          variant={moodFilter === option.value ? 'default' : 'outline'}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setMoodFilter(option.value as any)}
+                        >
+                          {typeof option.icon === 'string' ? option.icon : ''} {option.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           </div>
         </ResponsiveContainer>
       </header>
@@ -290,12 +452,33 @@ export default function SearchPage() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">No results for "{query}"</h3>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Searched {seedTracks.length} tracks with chord progressions
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Try searching for artist names like "weeknd" or chord progressions like "vi-IV-I-V"
-                </p>
+                {(selectedGenres.length > 0 || energyFilter !== 'all' || moodFilter !== 'all') ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      No tracks match your search with the selected filters
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedGenres([]);
+                        setEnergyFilter('all');
+                        setMoodFilter('all');
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Searched {seedTracks.length} tracks with chord progressions
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Try searching for artist names like "weeknd" or chord progressions like "vi-IV-I-V"
+                    </p>
+                  </>
+                )}
               </div>
               {!isSpotifyConnected && (
                 <div className="glass-strong rounded-xl p-6 space-y-3 mt-6">
@@ -322,16 +505,68 @@ export default function SearchPage() {
         {/* Search results */}
         {(spotifyResults.length > 0 || results.length > 0) && (
           <section>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-              Results ({spotifyResults.length + results.length})
-              {isSearching && <Loader2 className="w-3 h-3 animate-spin" />}
-              {spotifyResults.length > 0 && (
-                <span className="text-[#1DB954] text-xs">via Spotify</span>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 flex-wrap">
+                Results ({spotifyResults.length + results.length})
+                {isSearching && <Loader2 className="w-3 h-3 animate-spin" />}
+                {spotifyResults.length > 0 && (
+                  <span className="text-[#1DB954] text-xs">via Spotify</span>
+                )}
+                {results.length > 0 && (
+                  <span className="text-xs text-purple-500">via Local DB</span>
+                )}
+              </h2>
+              {(selectedGenres.length > 0 || energyFilter !== 'all' || moodFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedGenres([]);
+                    setEnergyFilter('all');
+                    setMoodFilter('all');
+                  }}
+                  className="h-7 text-xs"
+                >
+                  Clear Filters
+                </Button>
               )}
-              {results.length > 0 && (
-                <span className="text-xs text-purple-500">via Local DB ({seedTracks.length} tracks)</span>
-              )}
-            </h2>
+            </div>
+            
+            {/* Active filters display */}
+            {(selectedGenres.length > 0 || energyFilter !== 'all' || moodFilter !== 'all') && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedGenres.map((genre) => (
+                  <Badge key={genre} variant="secondary" className="text-xs">
+                    {genre}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => setSelectedGenres(prev => prev.filter(g => g !== genre))}
+                    />
+                  </Badge>
+                ))}
+                {energyFilter !== 'all' && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Zap className="w-3 h-3 mr-1" />
+                    {energyFilter} energy
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => setEnergyFilter('all')}
+                    />
+                  </Badge>
+                )}
+                {moodFilter !== 'all' && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Heart className="w-3 h-3 mr-1" />
+                    {moodFilter}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => setMoodFilter('all')}
+                    />
+                  </Badge>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               {/* Spotify results first */}
               {spotifyResults.map((track, index) => (
