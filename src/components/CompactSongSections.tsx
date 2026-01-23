@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Play } from 'lucide-react';
 import { TrackSection } from '@/types';
-import { useFloatingPlayers } from '@/contexts/FloatingPlayersContext';
+import { usePlayer } from '@/player/PlayerContext';
 import { cn } from '@/lib/utils';
 
 interface CompactSongSectionsProps {
@@ -10,6 +10,7 @@ interface CompactSongSectionsProps {
   spotifyId?: string;
   trackTitle: string;
   trackArtist: string;
+  canonicalTrackId?: string | null;
   className?: string;
 }
 
@@ -37,32 +38,50 @@ export function CompactSongSections({
   spotifyId,
   trackTitle, 
   trackArtist,
+  canonicalTrackId = null,
   className 
 }: CompactSongSectionsProps) {
-  const { playYouTube, playSpotify, youtubePlayer, spotifyPlayer, seekYouTube } = useFloatingPlayers();
+  const { openPlayer, currentProvider, youtubeTrackId, spotifyTrackId, seekTo, canonicalTrackId: activeCanonicalId } = usePlayer();
 
   const handleSectionClick = (section: TrackSection) => {
     const startSeconds = Math.floor(section.start_ms / 1000);
-    
-    // Check if this track is already playing
-    const isYoutubePlaying = youtubePlayer?.trackId.includes(youtubeId || '');
-    const isSpotifyPlaying = spotifyPlayer?.trackId === spotifyId;
-    
+
     if (youtubeId) {
-      if (isYoutubePlaying) {
-        // Seek in existing player
-        seekYouTube(startSeconds);
+      const isSameYoutube =
+        currentProvider === 'youtube' && youtubeTrackId === youtubeId && activeCanonicalId === canonicalTrackId;
+
+      if (isSameYoutube) {
+        seekTo(startSeconds);
       } else {
-        // Start new playback at timestamp
-        playYouTube(
-          `${youtubeId}&start=${startSeconds}`,
-          trackTitle,
-          trackArtist
-        );
+        openPlayer({
+          canonicalTrackId,
+          provider: 'youtube',
+          providerTrackId: youtubeId,
+          autoplay: true,
+          context: 'section-jump',
+          startSec: startSeconds,
+          title: trackTitle,
+          artist: trackArtist,
+        });
       }
-    } else if (spotifyId && !isSpotifyPlaying) {
-      // Spotify doesn't support timestamp, just play from start
-      playSpotify(spotifyId, trackTitle, trackArtist);
+      return;
+    }
+
+    if (spotifyId) {
+      const isSameSpotify =
+        currentProvider === 'spotify' && spotifyTrackId === spotifyId && activeCanonicalId === canonicalTrackId;
+
+      if (!isSameSpotify) {
+        openPlayer({
+          canonicalTrackId,
+          provider: 'spotify',
+          providerTrackId: spotifyId,
+          autoplay: true,
+          context: 'section-jump',
+          title: trackTitle,
+          artist: trackArtist,
+        });
+      }
     }
   };
 

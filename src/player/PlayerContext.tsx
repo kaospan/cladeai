@@ -15,6 +15,9 @@ export interface PlayerState {
   youtubeTrackId: string | null;
   autoplaySpotify: boolean;
   autoplayYoutube: boolean;
+  currentProvider: MusicProvider | null;
+  trackTitle: string | null;
+  trackArtist: string | null;
   /** Start time in seconds for seeking (e.g., section navigation) */
   seekToSec: number | null;
   /** Currently active section ID */
@@ -31,6 +34,8 @@ type OpenPlayerPayload = {
   canonicalTrackId: string | null;
   provider: MusicProvider;
   providerTrackId: string | null;
+  title?: string;
+  artist?: string;
   autoplay?: boolean;
   context?: string;
   /** Optional start time in seconds */
@@ -38,9 +43,14 @@ type OpenPlayerPayload = {
 };
 
 interface PlayerContextValue extends PlayerState {
+  /** Combined flag for whether the drawer should be visible */
+  readonly isOpen: boolean;
+  /** Currently active provider */
+  readonly currentProvider: MusicProvider | null;
   openPlayer: (payload: OpenPlayerPayload) => void;
   closeSpotify: () => void;
   closeYoutube: () => void;
+  closePlayer: () => void;
   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
   /** Seek to a specific time (seconds). Used for section navigation. */
   seekTo: (sec: number) => void;
@@ -86,6 +96,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     youtubeTrackId: null,
     autoplaySpotify: false,
     autoplayYoutube: false,
+    currentProvider: null,
+    trackTitle: null,
+    trackArtist: null,
     seekToSec: null,
     currentSectionId: null,
     isPlaying: false,
@@ -248,6 +261,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<PlayerContextValue>(() => ({
     ...state,
+    isOpen: state.spotifyOpen || state.youtubeOpen,
     seekTo,
     clearSeek,
     setCurrentSection,
@@ -262,19 +276,23 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     previousTrack,
     openPlayer: (payload) => {
       setState((prev) => {
+        const isSpotify = payload.provider === 'spotify';
         const updates: Partial<PlayerState> = {
           canonicalTrackId: payload.canonicalTrackId ?? prev.canonicalTrackId,
+          currentProvider: payload.provider,
+          trackTitle: payload.title ?? prev.trackTitle,
+          trackArtist: payload.artist ?? prev.trackArtist,
           seekToSec: payload.startSec ?? null,
+          spotifyOpen: isSpotify,
+          youtubeOpen: !isSpotify,
+          autoplaySpotify: isSpotify ? payload.autoplay ?? true : false,
+          autoplayYoutube: !isSpotify ? payload.autoplay ?? true : false,
         };
 
-        if (payload.provider === 'spotify') {
-          updates.spotifyOpen = true;
+        if (isSpotify) {
           updates.spotifyTrackId = payload.providerTrackId;
-          updates.autoplaySpotify = payload.autoplay ?? true;
         } else {
-          updates.youtubeOpen = true;
           updates.youtubeTrackId = payload.providerTrackId;
-          updates.autoplayYoutube = payload.autoplay ?? true;
         }
 
         return { ...prev, ...updates };
@@ -291,23 +309,49 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    closeSpotify: () => setState((prev) => ({ ...prev, spotifyOpen: false, autoplaySpotify: false })),
-    closeYoutube: () => setState((prev) => ({ ...prev, youtubeOpen: false, autoplayYoutube: false })),
+    closeSpotify: () => setState((prev) => ({
+      ...prev,
+      spotifyOpen: false,
+      autoplaySpotify: false,
+      currentProvider: prev.currentProvider === 'spotify' ? null : prev.currentProvider,
+      trackTitle: prev.currentProvider === 'spotify' ? null : prev.trackTitle,
+      trackArtist: prev.currentProvider === 'spotify' ? null : prev.trackArtist,
+    })),
+    closeYoutube: () => setState((prev) => ({
+      ...prev,
+      youtubeOpen: false,
+      autoplayYoutube: false,
+      currentProvider: prev.currentProvider === 'youtube' ? null : prev.currentProvider,
+      trackTitle: prev.currentProvider === 'youtube' ? null : prev.trackTitle,
+      trackArtist: prev.currentProvider === 'youtube' ? null : prev.trackArtist,
+    })),
+    closePlayer: () => setState((prev) => ({
+      ...prev,
+      spotifyOpen: false,
+      youtubeOpen: false,
+      autoplaySpotify: false,
+      autoplayYoutube: false,
+      currentProvider: null,
+      trackTitle: null,
+      trackArtist: null,
+    })),
     switchProvider: (provider, providerTrackId, canonicalTrackId) => {
       setState((prev) => {
+        const isSpotify = provider === 'spotify';
         const updates: Partial<PlayerState> = {
           canonicalTrackId: canonicalTrackId ?? prev.canonicalTrackId,
+          currentProvider: provider,
           seekToSec: null,
+          spotifyOpen: isSpotify,
+          youtubeOpen: !isSpotify,
+          autoplaySpotify: isSpotify,
+          autoplayYoutube: !isSpotify,
         };
 
-        if (provider === 'spotify') {
-          updates.spotifyOpen = true;
+        if (isSpotify) {
           updates.spotifyTrackId = providerTrackId;
-          updates.autoplaySpotify = true;
         } else {
-          updates.youtubeOpen = true;
           updates.youtubeTrackId = providerTrackId;
-          updates.autoplayYoutube = true;
         }
 
         return { ...prev, ...updates };

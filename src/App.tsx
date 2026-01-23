@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PlayerProvider } from "@/player/PlayerContext";
 import { YouTubePlayerProvider } from "@/contexts/YouTubePlayerContext";
-import { FloatingPlayersProvider } from "@/contexts/FloatingPlayersContext";
 import { QueueProvider } from "@/contexts/QueueContext";
 import { EmbeddedPlayerDrawer } from "@/player/EmbeddedPlayerDrawer";
 import { LoadingSpinner } from "@/components/shared";
@@ -50,9 +49,8 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <YouTubePlayerProvider>
-          <FloatingPlayersProvider>
-            <QueueProvider>
-              <PlayerProvider>
+          <QueueProvider>
+            <PlayerProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter basename="/clade">
@@ -93,7 +91,6 @@ const App = () => (
               </BrowserRouter>
             </PlayerProvider>
           </QueueProvider>
-        </FloatingPlayersProvider>
       </YouTubePlayerProvider>
     </AuthProvider>
   </TooltipProvider>

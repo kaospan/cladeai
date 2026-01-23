@@ -303,6 +303,7 @@ export function TrackCard({
             spotifyId={track.spotify_id}
             trackTitle={track.title}
             trackArtist={track.artist || ''}
+            canonicalTrackId={track.id}
           />
         </motion.div>
 
@@ -357,6 +358,7 @@ export function TrackCard({
               urlSpotifyApp: track.url_spotify_app || undefined,
               urlYoutube: track.url_youtube || undefined,
             }}
+            canonicalTrackId={track.id}
             trackTitle={track.title}
             trackArtist={track.artist}
             size="md"

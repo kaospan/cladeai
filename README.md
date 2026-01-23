@@ -113,8 +113,8 @@ src/
 │   ├── harmony.ts       # Harmonic analysis types
 │   └── index.ts         # Core Track, User types
 └── contexts/            # React Context providers
-    ├── QueueContext.tsx         # Playback queue management
-    └── FloatingPlayersContext.tsx  # Player z-index control
+  ├── QueueContext.tsx         # Playback queue management
+  └── YouTubePlayerContext.tsx # Player iframe helpers
 ```
 
 ## 🛠️ Tech Stack
