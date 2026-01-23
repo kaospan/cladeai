@@ -25,6 +25,67 @@ export interface VideoResult {
 }
 
 /**
+ * Fetch a single YouTube video by ID and return minimal metadata as a Track-like object
+ */
+export async function getYouTubeVideo(videoId: string) {
+  const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+
+  if (!apiKey) {
+    console.warn('YouTube API key not configured');
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    part: 'snippet,contentDetails',
+    id: videoId,
+    key: apiKey,
+  });
+
+  try {
+    const res = await fetch(`${YOUTUBE_API_BASE}/videos?${params}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const item = data.items?.[0];
+    if (!item) return null;
+
+    // Rough parse of title into artist - title when possible
+    const titleText: string = item.snippet.title || '';
+    const [maybeArtist, maybeTitle] = titleText.includes(' - ') ? titleText.split(' - ', 2) : [undefined, titleText];
+
+    // Convert ISO 8601 duration to ms
+    const durationIso: string = item.contentDetails?.duration || '';
+    const durationMs = iso8601DurationToMs(durationIso);
+
+    return {
+      id: `youtube:${videoId}`,
+      title: maybeTitle || titleText,
+      artist: maybeArtist || item.snippet.channelTitle,
+      cover_url: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+      youtube_id: videoId,
+      duration_ms: durationMs,
+      provider: 'youtube' as const,
+    };
+  } catch (err) {
+    console.error('getYouTubeVideo error', err);
+    return null;
+  }
+}
+
+function iso8601DurationToMs(iso: string): number {
+  // Very small parser for PT#M#S
+  try {
+    const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!m) return 0;
+    const hours = parseInt(m[1] || '0', 10);
+    const minutes = parseInt(m[2] || '0', 10);
+    const seconds = parseInt(m[3] || '0', 10);
+    return ((hours * 3600) + (minutes * 60) + seconds) * 1000;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Search YouTube for a song
  * Returns multiple video types: official, covers, live performances, etc.
  */

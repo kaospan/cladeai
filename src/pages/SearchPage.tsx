@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { openProviderLink, getProviderLinks } from '@/lib/providers';
 import { useAuth } from '@/hooks/useAuth';
 import { searchSpotify } from '@/services/spotifySearchService';
+import { searchYouTubeVideos } from '@/services/youtubeSearchService';
 import { useSpotifyConnected } from '@/hooks/api/useSpotifyUser';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveLayout';
 import { 
@@ -28,6 +29,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'song' | 'chord'>('song');
   const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
+  const [youtubeResults, setYoutubeResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -64,6 +66,38 @@ export default function SearchPage() {
 
     return () => clearTimeout(timer);
   }, [query, searchMode, user, isSpotifyConnected]);
+
+  // YouTube search fallback when Spotify is not connected
+  useEffect(() => {
+    let cancelled = false;
+    if (searchMode !== 'song' || !query.trim() || isSpotifyConnected) {
+      setYoutubeResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const yt = await searchYouTubeVideos(query, '');
+        if (cancelled) return;
+        const mapped: Track[] = yt.map(v => ({
+          id: `youtube:${v.videoId}`,
+          title: v.title,
+          artist: v.channel,
+          youtube_id: v.videoId,
+          provider: 'youtube',
+        } as Track));
+        setYoutubeResults(mapped);
+      } catch (err) {
+        console.error('YouTube search error:', err);
+        setYoutubeResults([]);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, searchMode, isSpotifyConnected]);
 
   // Instant local search with memoization for zero-latency feel
   const results = useMemo(() => {

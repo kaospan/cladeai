@@ -18,6 +18,7 @@ import { usePlayer } from '@/player/PlayerContext';
 import { BottomNav } from '@/components/BottomNav';
 import { ChordBadge } from '@/components/ChordBadge';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
+import SectionYouTubeSnippet from '@/components/SectionYouTubeSnippet';
 import { TrackLineageView } from '@/components/TrackLineageView';
 import { TrackComments } from '@/components/TrackComments';
 import { TikTokStyleButtons } from '@/components/TikTokStyleButtons';
@@ -73,14 +74,16 @@ export default function TrackDetailPage() {
   
   const currentChordIndex = getCurrentChordIndex();
   
-  // Load sections when track is available
+  // Load sections and related data when track is available
   useEffect(() => {
     if (!track?.id) return;
-    
-    loadSections();
-    loadHooktheoryData();
-    loadWhoSampledData();
-    loadYouTubeVideos();
+
+    (async () => {
+      await loadSections();
+      await loadHooktheoryData();
+      await loadWhoSampledData();
+      await loadYouTubeVideos();
+    })();
   }, [track?.id]);
 
   async function loadYouTubeVideos() {
@@ -96,16 +99,21 @@ export default function TrackDetailPage() {
         type: r.type,
       }));
       setYoutubeVideos(videos);
-      
-      // Auto-play first video using persistent player
+
+      // Auto-play first video using persistent player at the intro timestamp when available
       if (videos.length > 0 && track.artist && track.title) {
         const firstVideo = videos[0];
         setActiveVideoId(firstVideo.videoId);
+
+        // find intro section start (ms) or fallback to 0
+        const intro = sections.find(s => s.label?.toLowerCase() === 'intro') || sections[0];
+        const introStartSec = intro ? Math.floor((intro.start_ms || 0) / 1000) : 0;
+
         playVideo({
           videoId: firstVideo.videoId,
           title: track.title,
           artist: track.artist,
-          startSeconds: 0,
+          startSeconds: introStartSec,
         });
       }
     } catch (err) {
@@ -558,7 +566,7 @@ export default function TrackDetailPage() {
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div>
+                        <div className="flex-1">
                           <div className={cn(
                             "font-medium capitalize flex items-center gap-2",
                             isActive && "text-primary"
@@ -571,8 +579,21 @@ export default function TrackDetailPage() {
                             {formatTime(section.start_ms)} - {formatTime(section.end_ms)}
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDuration(section.end_ms - section.start_ms)}
+
+                        <div className="flex-shrink-0 ml-4 flex flex-col items-end">
+                          <div className="text-xs text-muted-foreground">
+                            {formatDuration(section.end_ms - section.start_ms)}
+                          </div>
+
+                          {/* Tiny YouTube snippet for this section (uses first video source or track.youtube_id) */}
+                          {((videoSources && videoSources[0]) || track.youtube_id) && (
+                            <div className="mt-2">
+                              <SectionYouTubeSnippet
+                                videoId={(videoSources && videoSources[0]?.videoId) || track.youtube_id!}
+                                startSeconds={Math.floor(section.start_ms / 1000)}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                       
