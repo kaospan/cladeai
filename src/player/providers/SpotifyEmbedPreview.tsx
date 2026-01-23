@@ -9,6 +9,11 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
     utm_source: 'harmony-hub',
     theme: '0', // Dark theme
   });
+  // When a user explicitly requested autoplay, try to request it on the embed.
+  // Spotify may ignore autoplay depending on browser or account, but adding the
+  // query param makes the intent explicit and improves consistency across pages.
+  if (autoplay) params.set('autoplay', '1');
+
   // Use compact embed (height 80) for audio-only experience
   const src = `https://open.spotify.com/embed/track/${providerTrackId}?${params.toString()}`;
   return (

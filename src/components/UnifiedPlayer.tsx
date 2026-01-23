@@ -42,7 +42,7 @@ export function UnifiedPlayer({
         canonicalTrackId: trackId,
         provider: 'spotify',
         providerTrackId: spotifyId,
-        autoplay,
+        autoplay: true,
       });
     }
   };
@@ -54,7 +54,7 @@ export function UnifiedPlayer({
         canonicalTrackId: trackId,
         provider: 'youtube',
         providerTrackId: youtubeId,
-        autoplay,
+        autoplay: true,
       });
     }
   };

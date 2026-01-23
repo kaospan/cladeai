@@ -9,7 +9,7 @@
  * - Auto-start from intro timestamp
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTrack } from '@/hooks/api/useTracks';
@@ -44,7 +44,7 @@ export default function TrackDetailPage() {
   const navigate = useNavigate();
   const { data: track, isLoading } = useTrack(decodeURIComponent(trackId || ''));
   const { playVideo, currentVideo, currentTime, seekTo } = useYouTubePlayer();
-  const { openPlayer } = usePlayer();
+  const { openPlayer, spotifyOpen, spotifyTrackId, autoplaySpotify } = usePlayer();
   
   const [sections, setSections] = useState<TrackSection[]>([]);
   const [hooktheoryData, setHooktheoryData] = useState<any>(null);
@@ -520,17 +520,33 @@ export default function TrackDetailPage() {
             className="w-full max-w-2xl mx-auto"
           >
             <div className="rounded-lg overflow-hidden shadow-xl">
-              <iframe
-                style={{ borderRadius: '12px' }}
-                src={`https://open.spotify.com/embed/track/${track.spotify_id}?utm_source=generator&theme=0`}
-                width="100%"
-                height="352"
-                frameBorder="0"
-                allowFullScreen={false}
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                className="w-full"
-              />
+                {
+                  (() => {
+                    const src = (() => {
+                      const params = new URLSearchParams({ utm_source: 'generator', theme: '0' });
+                      // If the global player has requested autoplay for this spotify track,
+                      // add the autoplay flag to the embed URL so the embed knows the intent.
+                      if (spotifyOpen && spotifyTrackId === track.spotify_id && autoplaySpotify) {
+                        params.set('autoplay', '1');
+                      }
+                      return `https://open.spotify.com/embed/track/${track.spotify_id}?${params.toString()}`;
+                    })();
+
+                    return (
+                      <iframe
+                        style={{ borderRadius: '12px' }}
+                        src={src}
+                        width="100%"
+                        height="352"
+                        frameBorder="0"
+                        allowFullScreen={false}
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        className="w-full"
+                      />
+                    );
+                  })()
+                }
             </div>
           </motion.div>
         )}
