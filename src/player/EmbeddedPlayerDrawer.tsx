@@ -31,11 +31,12 @@ export function EmbeddedPlayerDrawer() {
 
   if (!isOpen || !provider || !providerTrackId) return null;
 
-  // Slim, clickable, always on top, 12:1 aspect ratio, shows title
+  // Slim, clickable, always on top (higher z than floating buttons), but the
+  // page layout will reserve space so the player doesn't cover content.
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 w-full flex items-center justify-center ${meta.color}`}
-      style={{ aspectRatio: '12/1', minHeight: 0, height: '48px', maxHeight: '52px', boxShadow: '0 -2px 16px rgba(0,0,0,0.18)' }}
+      className={`fixed bottom-0 left-0 right-0 z-[60] w-full flex items-center justify-center ${meta.color}`}
+      style={{ aspectRatio: '12/1', minHeight: 0, height: 'var(--clade-player-height,52px)', maxHeight: '52px', boxShadow: '0 -2px 16px rgba(0,0,0,0.18)' }}
       role="region"
       aria-label="Now Playing"
     >

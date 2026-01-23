@@ -264,3 +264,11 @@
     padding-top: env(safe-area-inset-top);
   }
 }
+
+/* When the floating player is open we add this body class. The rule below
+   reserves space at the bottom of the page equal to the player's height so
+   the player never visually covers content or buttons. The CSS variable
+   --clade-player-height is set from JS (PlayerProvider) and falls back to 52px. */
+body.clade-player-open {
+  padding-bottom: calc(var(--clade-player-height, 52px) + env(safe-area-inset-bottom));
+}

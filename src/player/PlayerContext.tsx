@@ -371,6 +371,28 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     },
   }), [state, seekTo, clearSeek, setCurrentSection, setIsPlaying, addToQueue, playFromQueue, removeFromQueue, reorderQueue, clearQueue, shuffleQueue, nextTrack, previousTrack]);
 
+  // Ensure the page layout reserves space for the floating player when open so
+  // the player never ends up visually behind other UI. We toggle a body class
+  // and set a CSS variable with the player's height to let global styles
+  // push content above the player (no content is covered).
+  const isOpen = state.spotifyOpen || state.youtubeOpen;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const el = document.body;
+      if (isOpen) {
+        el.classList.add('clade-player-open');
+        // Keep this in sync with EmbeddedPlayerDrawer's height
+        el.style.setProperty('--clade-player-height', '52px');
+      } else {
+        el.classList.remove('clade-player-open');
+        el.style.removeProperty('--clade-player-height');
+      }
+    } catch (err) {
+      console.error('Failed to toggle player body class', err);
+    }
+  }, [isOpen]);
+
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 }
 
