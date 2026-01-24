@@ -69,12 +69,22 @@ export function EmbeddedPlayerDrawer() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Nuclear assertion: never allow more than one universal player in dev/test
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
+    const players = document.querySelectorAll('[data-player="universal"]');
+    if (players.length > 1) {
+      throw new Error('FATAL: More than one universal player mounted. This is a bug.');
+    }
+  });
+
   if (!isOpen || !provider || !trackId) return null;
 
   // Mobile: Compact strip at top-right corner (audio-only, no video)
   // Desktop: Bottom player bar with full controls
   return (
-    <>
+    <div id="universal-player" data-player="universal">
       {/* Mobile Player - Top-right compact strip */}
       <div
         className={cn(
@@ -261,6 +271,6 @@ export function EmbeddedPlayerDrawer() {
           <YouTubePlayer providerTrackId={trackId} autoplay={autoplay} />
         )}
       </div>
-    </>
+    </div>
   );
 }

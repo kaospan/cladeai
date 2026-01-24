@@ -197,6 +197,7 @@ export function TrackCard({
       initial={{ opacity: 0 }}
       animate={{ opacity: isActive ? 1 : 0.5 }}
       className="relative w-full h-full flex flex-col"
+      data-track-card={track.id}
     >
       {/* Hidden audio element for preview playback */}
       {track.preview_url && (

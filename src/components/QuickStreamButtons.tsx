@@ -111,6 +111,7 @@ export function QuickStreamButtons({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleSpotifyClick}
+          data-provider="spotify"
           className={cn(
             sizeClasses[size],
             'rounded-full flex items-center justify-center transition-all',
@@ -130,6 +131,7 @@ export function QuickStreamButtons({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleYouTubeClick}
+          data-provider="youtube"
           className={cn(
             sizeClasses[size],
             'rounded-full flex items-center justify-center transition-all',
