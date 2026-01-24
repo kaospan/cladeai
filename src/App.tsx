@@ -15,7 +15,8 @@ import { AdminRoute } from "@/components/AdminRoute";
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index")); // Landing Page
 const FeedPage = lazy(() => import("./pages/FeedPage"));
-const AuthPage = lazy(() => import("./pages/AuthPage"));
+const AuthGatePage = lazy(() => import("./pages/AuthGatePage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -62,7 +63,8 @@ const App = () => (
                     <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/billing" element={<BillingPage />} />
                     <Route path="/feed" element={<FeedPage />} />
-                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/auth" element={<AuthGatePage />} />
+                    <Route path="/login" element={<LoginPage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/compare" element={<ComparePage />} />
                     <Route path="/profile" element={<ProfilePage />} />
