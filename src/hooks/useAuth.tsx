@@ -100,6 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    // Exiting guest mode on sign-in intent to avoid stale guest flags
+    localStorage.removeItem('clade-guest-mode');
+    setGuestMode(false);
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.session) {
       setSession(data.session as Session);
