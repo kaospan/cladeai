@@ -273,7 +273,7 @@
 /* Mobile: top padding for fixed top-right player */
 @media (max-width: 768px) {
   body.clade-player-open {
-    padding-top: max(env(safe-area-inset-top), 10rem);
+    padding-top: 8rem;
   }
 }
 
