@@ -35,14 +35,14 @@ export function CompactSongSections({
   canonicalTrackId = null,
   className 
 }: CompactSongSectionsProps) {
-  const { openPlayer, currentProvider, youtubeTrackId, spotifyTrackId, seekTo, canonicalTrackId: activeCanonicalId } = usePlayer();
+  const { openPlayer, provider: currentProvider, trackId: currentTrackId, seekTo, canonicalTrackId: activeCanonicalId } = usePlayer();
 
   const handleSectionClick = (section: TrackSection) => {
     const startSeconds = Math.floor(section.start_ms / 1000);
 
     if (youtubeId) {
       const isSameYoutube =
-        currentProvider === 'youtube' && youtubeTrackId === youtubeId && activeCanonicalId === canonicalTrackId;
+        currentProvider === 'youtube' && currentTrackId === youtubeId && activeCanonicalId === canonicalTrackId;
 
       if (isSameYoutube) {
         seekTo(startSeconds);
@@ -63,7 +63,7 @@ export function CompactSongSections({
 
     if (spotifyId) {
       const isSameSpotify =
-        currentProvider === 'spotify' && spotifyTrackId === spotifyId && activeCanonicalId === canonicalTrackId;
+        currentProvider === 'spotify' && currentTrackId === spotifyId && activeCanonicalId === canonicalTrackId;
 
       if (!isSameSpotify) {
         openPlayer({
