@@ -94,7 +94,8 @@ export function EmbeddedPlayerDrawer() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 48, opacity: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="pointer-events-auto fixed bottom-16 md:bottom-6 left-0 right-0 md:left-1/2 md:right-auto z-[100] transform md:-translate-x-1/2 w-full md:w-[640px] md:max-w-[640px] px-2 md:px-0"
+        data-player="universal"
+        className="pointer-events-auto fixed top-4 right-4 left-4 md:top-auto md:bottom-6 md:left-1/2 md:right-auto z-[60] transform md:-translate-x-1/2 w-[calc(100vw-2rem)] md:w-[640px] md:max-w-[640px] px-2 md:px-0"
       >
         <div className={`overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
           {/* Header - Always visible, compact on mobile */}
@@ -109,7 +110,7 @@ export function EmbeddedPlayerDrawer() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setIsMinimized(!isMinimized)}
+                onClick={() => setMinimized(!isMinimized)}
                 className="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground"
                 aria-label={isMinimized ? 'Expand player' : 'Minimize player'}
               >
