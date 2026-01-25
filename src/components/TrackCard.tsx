@@ -440,8 +440,15 @@ export function TrackCard({
           transition={{ delay: 0.25 }}
           className="flex items-center justify-center gap-4"
         >
-          {/* Comments */}
-          <CommentsSheet trackId={track.id} trackTitle={track.title} />
+          {/* Comments - Now inline with count */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted transition-all text-muted-foreground hover:text-foreground"
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span className="text-sm font-medium">{commentCount}</span>
+          </motion.button>
 
           {/* Nearby Listeners */}
           <NearbyListenersSheet 
@@ -453,6 +460,23 @@ export function TrackCard({
           {/* Share */}
           <ShareSheet track={track} onShare={handleShare} />
         </motion.div>
+
+        {/* Expandable Comments Section */}
+        <AnimatePresence>
+          {showComments && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <TrackComments trackId={track.id} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
