@@ -6,6 +6,7 @@ import { FeedSidebar } from '@/components/FeedSidebar';
 import { LiveChat } from '@/components/LiveChat';
 import { ScrollingComments } from '@/components/ScrollingComments';
 import { BottomNav } from '@/components/BottomNav';
+import { GuestBanner } from '@/components/GuestBanner';
 import { ResponsiveContainer, DesktopColumns } from '@/components/layout/ResponsiveLayout';
 import { useFeedTracks } from '@/hooks/api/useTracks';
 import { useSpotifyRecentlyPlayed } from '@/hooks/api/useSpotifyUser';
@@ -336,6 +337,9 @@ export default function FeedPage() {
       {tracks[currentIndex] && (
         <ScrollingComments roomId="global" maxVisible={3} scrollSpeed={4000} />
       )}
+
+      {/* Guest banner */}
+      <GuestBanner />
 
       {/* Bottom navigation */}
       <BottomNav />
