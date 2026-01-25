@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { usePlayer } from './PlayerContext';
 import { YouTubePlayer } from './providers/YouTubePlayer';
 import { SpotifyEmbedPreview } from './providers/SpotifyEmbedPreview';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, X, ChevronsDownUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, X, ChevronsDownUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const providerMeta = {
@@ -13,32 +13,30 @@ const providerMeta = {
 
 export function EmbeddedPlayerDrawer() {
   const {
-    spotifyOpen,
-    youtubeOpen,
-    spotifyTrackId,
-    youtubeTrackId,
-    autoplaySpotify,
-    autoplayYoutube,
-    closeSpotify,
-    closeYoutube,
-    queue,
-    queueIndex,
-    playFromQueue,
-    removeFromQueue,
-    reorderQueue,
-      provider,
-      trackId,
-      trackTitle,
-      trackArtist,
-      isOpen,
-      isMinimized,
-      setMinimized,
-      setIsPlaying,
-      isOpen,
-      isMinimized,
-      setMinimized,
-      setIsPlaying,
-    return provider ? providerMeta[provider as keyof typeof providerMeta] ?? { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90' } : { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90' };
+    provider,
+    trackId,
+    trackTitle,
+    trackArtist,
+    isOpen,
+    isMinimized,
+    setMinimized,
+    isPlaying,
+    setIsPlaying,
+    nextTrack,
+    previousTrack,
+    closePlayer,
+  } = usePlayer();
+
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(70);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const autoplay = isPlaying;
+
+  const meta = useMemo(() => {
+    const fallback = { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90' };
+    return provider ? providerMeta[provider as keyof typeof providerMeta] ?? fallback : fallback;
   }, [provider]);
 
   // Format time as MM:SS
@@ -84,8 +82,6 @@ export function EmbeddedPlayerDrawer() {
 
   if (!isOpen || !provider || !trackId) return null;
 
-  // Mobile: Compact strip at top-right corner (audio-only, no video)
-  // Desktop: Bottom player bar with full controls
   return (
     <div
       id="universal-player"
