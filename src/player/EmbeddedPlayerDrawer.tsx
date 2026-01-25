@@ -95,7 +95,7 @@ export function EmbeddedPlayerDrawer() {
         exit={{ y: 48, opacity: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         data-player="universal"
-        className="pointer-events-auto fixed top-4 right-4 left-4 md:top-auto md:bottom-6 md:left-1/2 md:right-auto z-[60] transform md:-translate-x-1/2 w-[calc(100vw-2rem)] md:w-[640px] md:max-w-[640px] px-2 md:px-0"
+        className="pointer-events-auto fixed top-4 right-4 left-4 md:top-auto md:bottom-[calc(env(safe-area-inset-bottom)+24px)] md:left-1/2 md:right-auto z-[60] transform md:-translate-x-1/2 w-[calc(100vw-2rem)] md:w-[640px] md:max-w-[640px] px-2 md:px-0"
       >
         <div className={`overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
           {/* Header - Always visible, compact on mobile */}
