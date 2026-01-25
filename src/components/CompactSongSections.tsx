@@ -35,47 +35,28 @@ export function CompactSongSections({
   canonicalTrackId = null,
   className 
 }: CompactSongSectionsProps) {
-  const { openPlayer, provider: currentProvider, trackId: currentTrackId, seekTo, canonicalTrackId: activeCanonicalId } = usePlayer();
+  const { openPlayer, seekTo, youtubeOpen, youtubeTrackId, spotifyOpen, spotifyTrackId } = usePlayer();
 
   const handleSectionClick = (section: TrackSection) => {
     const startSeconds = Math.floor(section.start_ms / 1000);
 
-    if (youtubeId) {
-      const isSameYoutube =
-        currentProvider === 'youtube' && currentTrackId === youtubeId && activeCanonicalId === canonicalTrackId;
+    const isYoutubePlaying = youtubeOpen && youtubeTrackId?.includes(youtubeId || '');
+    const isSpotifyPlaying = spotifyOpen && spotifyTrackId === spotifyId;
 
-      if (isSameYoutube) {
+    if (youtubeId) {
+      if (isYoutubePlaying) {
         seekTo(startSeconds);
       } else {
         openPlayer({
-          canonicalTrackId,
+          canonicalTrackId: null,
           provider: 'youtube',
           providerTrackId: youtubeId,
           autoplay: true,
-          context: 'section-jump',
           startSec: startSeconds,
-          title: trackTitle,
-          artist: trackArtist,
         });
       }
-      return;
-    }
-
-    if (spotifyId) {
-      const isSameSpotify =
-        currentProvider === 'spotify' && currentTrackId === spotifyId && activeCanonicalId === canonicalTrackId;
-
-      if (!isSameSpotify) {
-        openPlayer({
-          canonicalTrackId,
-          provider: 'spotify',
-          providerTrackId: spotifyId,
-          autoplay: true,
-          context: 'section-jump',
-          title: trackTitle,
-          artist: trackArtist,
-        });
-      }
+    } else if (spotifyId && !isSpotifyPlaying) {
+      openPlayer({ canonicalTrackId: null, provider: 'spotify', providerTrackId: spotifyId, autoplay: true });
     }
   };
 

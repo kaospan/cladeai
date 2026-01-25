@@ -23,6 +23,8 @@ interface YouTubePlayerContextValue {
   stopVideo: () => void;
   setIsPlaying: (playing: boolean) => void;
   seekTo: (seconds: number) => void;
+  /** Allow external players to set current playback time */
+  setCurrentPlaybackTime: (seconds: number) => void;
 }
 
 const YouTubePlayerContext = createContext<YouTubePlayerContextValue | null>(null);
@@ -34,24 +36,33 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0);
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateRef = useRef<number | null>(null);
 
-  // Update current time while playing
+  // Update current time while playing with elapsed-time based updates to avoid drift
   useEffect(() => {
     if (isPlaying && currentVideo) {
+      lastUpdateRef.current = performance.now();
       intervalRef.current = setInterval(() => {
-        setCurrentTime(prev => prev + 0.1);
-      }, 100);
+        const now = performance.now();
+        const last = lastUpdateRef.current ?? now;
+        const delta = (now - last) / 1000; // seconds
+        lastUpdateRef.current = now;
+        setCurrentTime(prev => prev + delta);
+      }, 200);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      lastUpdateRef.current = null;
     }
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
+      lastUpdateRef.current = null;
     };
   }, [isPlaying, currentVideo]);
 
@@ -76,6 +87,12 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
     setCurrentTime(seconds);
   };
 
+  // Expose a method to set current time from external players (e.g., iframe onTimeUpdate)
+  const setCurrentPlaybackTime = (seconds: number) => {
+    setCurrentTime(seconds);
+  };
+
+
   return (
     <YouTubePlayerContext.Provider
       value={{
@@ -88,6 +105,7 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
         stopVideo,
         setIsPlaying,
         seekTo,
+        setCurrentPlaybackTime,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { TrackProviderInfo, getProviderLinks } from '@/lib/providers';
 import { getPreferredProvider, setPreferredProvider } from '@/lib/preferences';
 import { usePlayer } from '@/player/PlayerContext';
+import { usePlayer } from '@/player/PlayerContext';
 import { cn } from '@/lib/utils';
 
 interface QuickStreamButtonsProps {
@@ -50,6 +51,7 @@ export function QuickStreamButtons({
   const spotifyLink = links.find(l => l.provider === 'spotify');
   const youtubeLink = links.find(l => l.provider === 'youtube');
   const preferredProvider = getPreferredProvider();
+  const { openPlayer } = usePlayer();
   const { openPlayer } = usePlayer();
 
   const handleSpotifyClick = useCallback(() => {

@@ -13,18 +13,23 @@ const providerMeta = {
 
 export function EmbeddedPlayerDrawer() {
   const {
-    isOpen,
-    provider,
-    trackId,
+    spotifyOpen,
+    youtubeOpen,
+    spotifyTrackId,
+    youtubeTrackId,
+    autoplaySpotify,
+    autoplayYoutube,
+    closeSpotify,
+    closeYoutube,
+    queue,
+    queueIndex,
+    playFromQueue,
+    removeFromQueue,
+    reorderQueue,
+    clearQueue,
+    shuffleQueue,
     isPlaying,
-    setIsPlaying,
-    isMinimized,
-    setMinimized,
-    closePlayer,
-    trackTitle,
-    trackArtist,
-    nextTrack,
-    previousTrack,
+    seekToSec,
   } = usePlayer();
 
   const [isMuted, setIsMuted] = useState(false);
