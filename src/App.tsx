@@ -52,14 +52,9 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <YouTubePlayerProvider>
-<<<<<<< Updated upstream
-          <QueueProvider>
-            <PlayerProvider>
-=======
           <PlayerProvider>
             <FloatingPlayersProvider>
               <QueueProvider>
->>>>>>> Stashed changes
               <Toaster />
               <Sonner />
               <BrowserRouter basename={import.meta.env.BASE_URL}>
@@ -101,14 +96,9 @@ const App = () => (
                 </Suspense>
                 <EmbeddedPlayerDrawer />
               </BrowserRouter>
-<<<<<<< Updated upstream
-            </PlayerProvider>
-          </QueueProvider>
-=======
             </QueueProvider>
           </FloatingPlayersProvider>
         </PlayerProvider>
->>>>>>> Stashed changes
       </YouTubePlayerProvider>
     </AuthProvider>
   </TooltipProvider>

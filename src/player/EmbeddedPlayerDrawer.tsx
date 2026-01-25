@@ -93,7 +93,7 @@ export function EmbeddedPlayerDrawer() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 48, opacity: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="pointer-events-auto fixed bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-4 z-[100] md:pb-20 w-full md:w-[360px] md:max-w-[360px] px-2 md:px-0"
+        className="pointer-events-auto fixed bottom-16 md:bottom-6 left-0 right-0 md:left-1/2 md:right-auto z-[100] transform md:-translate-x-1/2 w-full md:w-[640px] md:max-w-[640px] px-2 md:px-0"
       >
         <div className={`overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
           {/* Header - Always visible, compact on mobile */}
