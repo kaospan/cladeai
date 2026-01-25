@@ -1,53 +1,53 @@
-// import { createContext, useContext, useMemo, useState, useCallback, useEffect, ReactNode } from 'react';
-// import { recordPlayEvent } from '@/api/playEvents';
-// import { MusicProvider } from '@/types';
-// import { getPreferredProvider } from '@/lib/preferences';
+import { createContext, useContext, useMemo, useState, useCallback, useEffect, ReactNode } from 'react';
+import { recordPlayEvent } from '@/api/playEvents';
+import { MusicProvider } from '@/types';
+import { getPreferredProvider } from '@/lib/preferences';
 
-// export interface ConnectedProviders {
-//   spotify?: { connected: boolean; premium: boolean };
-// }
+export interface ConnectedProviders {
+  spotify?: { connected: boolean; premium: boolean };
+}
 
-// export interface PlayerState {
-//   provider: MusicProvider | null;
-//   trackId: string | null;
-//   canonicalTrackId: string | null;
-//   trackTitle: string | null;
-//   trackArtist: string | null;
-//   isPlaying: boolean;
-//   isMinimized: boolean;
-//   seekToSec: number | null;
-//   currentSectionId: string | null;
-//   queue: import('@/types').Track[];
-//   queueIndex: number;
-// }
+export interface PlayerState {
+  provider: MusicProvider | null;
+  trackId: string | null;
+  canonicalTrackId: string | null;
+  trackTitle: string | null;
+  trackArtist: string | null;
+  isPlaying: boolean;
+  isMinimized: boolean;
+  seekToSec: number | null;
+  currentSectionId: string | null;
+  queue: import('@/types').Track[];
+  queueIndex: number;
+}
 
-// type OpenPlayerPayload = {
-//   canonicalTrackId: string | null;
-//   provider: MusicProvider;
-//   providerTrackId: string | null;
-//   title?: string;
-//   artist?: string;
-//   autoplay?: boolean;
-//   context?: string;
-//   /** Optional start time in seconds */
-//   startSec?: number;
-// };
+type OpenPlayerPayload = {
+  canonicalTrackId: string | null;
+  provider: MusicProvider;
+  providerTrackId: string | null;
+  title?: string;
+  artist?: string;
+  autoplay?: boolean;
+  context?: string;
+  /** Optional start time in seconds */
+  startSec?: number;
+};
 
-// interface PlayerContextValue extends PlayerState {
-//   readonly isOpen: boolean;
-//   openPlayer: (payload: OpenPlayerPayload) => void;
-//   closePlayer: () => void;
-//   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
-//   seekTo: (sec: number) => void;
-//   clearSeek: () => void;
-//   setCurrentSection: (sectionId: string | null) => void;
-//   setIsPlaying: (playing: boolean) => void;
-//   setMinimized: (value: boolean) => void;
-//   addToQueue: (track: import('@/types').Track) => void;
-//   playFromQueue: (index: number) => void;
-//   removeFromQueue: (index: number) => void;
-//   reorderQueue: (newQueue: import('@/types').Track[]) => void;
-//   clearQueue: () => void;
+interface PlayerContextValue extends PlayerState {
+  readonly isOpen: boolean;
+  openPlayer: (payload: OpenPlayerPayload) => void;
+  closePlayer: () => void;
+  switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
+  seekTo: (sec: number) => void;
+  clearSeek: () => void;
+  setCurrentSection: (sectionId: string | null) => void;
+  setIsPlaying: (playing: boolean) => void;
+  setMinimized: (value: boolean) => void;
+  addToQueue: (track: import('@/types').Track) => void;
+  playFromQueue: (index: number) => void;
+  removeFromQueue: (index: number) => void;
+  reorderQueue: (newQueue: import('@/types').Track[]) => void;
+  clearQueue: () => void;
 //   shuffleQueue: () => void;
 //   nextTrack: () => void;
 //   previousTrack: () => void;
