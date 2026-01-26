@@ -280,56 +280,40 @@ export default function FeedPage() {
       {/* Feed content */}
       <main className="flex-1 pt-16 pb-24">
         <ResponsiveContainer maxWidth="full" className="py-6">
-          <DesktopColumns
-            left={
-              <FeedSidebar
-                currentTrack={currentTrack}
-                trackIndex={currentIndex}
-                totalTracks={tracks.length}
-              />
-            }
-            center={
-              <div className="h-[calc(100vh-12rem)] max-w-lg mx-auto lg:max-w-2xl">
-                <AnimatePresence mode="wait">
-                  {currentTrack && (
-                    <motion.div
-                      key={currentTrack.id}
-                      initial={{ opacity: 0, y: 50 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -50 }}
-                      transition={{ duration: 0.3 }}
-                      className="h-full"
-                    >
-                      <TrackCard
-                        track={currentTrack}
-                        isActive={true}
-                        onInteraction={handleInteraction}
-                        interactions={interactions.get(currentTrack.id) || new Set()}
-                         onPipModeActivate={(videoId, title) => {
-                           if (!videoId) return;
-                           openPlayer({
-                             canonicalTrackId: currentTrack.id,
-                             provider: 'youtube',
-                             providerTrackId: videoId,
-                             autoplay: true,
-                             context: 'feed',
-                             title,
-                             artist: currentTrack.artist,
-                           });
-                         }}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            }
-            right={
-              <div className="sticky top-20 space-y-4">
-                <LiveChat roomType="global" className="h-[calc(100vh-8rem)]" />
-              </div>
-            }
-            centerWidth="wide"
-          />
+          {/* Simple center-focused layout for all users */}
+          <div className="h-[calc(100vh-12rem)] max-w-lg mx-auto lg:max-w-2xl">
+            <AnimatePresence mode="wait">
+              {currentTrack && (
+                <motion.div
+                  key={currentTrack.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -50 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  <TrackCard
+                    track={currentTrack}
+                    isActive={true}
+                    onInteraction={handleInteraction}
+                    interactions={interactions.get(currentTrack.id) || new Set()}
+                     onPipModeActivate={(videoId, title) => {
+                       if (!videoId) return;
+                       openPlayer({
+                         canonicalTrackId: currentTrack.id,
+                         provider: 'youtube',
+                         providerTrackId: videoId,
+                         autoplay: true,
+                         context: 'feed',
+                         title,
+                         artist: currentTrack.artist,
+                       });
+                     }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </ResponsiveContainer>
       </main>
 
