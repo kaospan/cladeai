@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
-import { QuickStreamButtons } from '@/components/QuickStreamButtons';
+import QuickStreamButtons from '@/components/QuickStreamButtons';
 
 const openPlayerMock = vi.fn();
 
