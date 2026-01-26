@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { usePlayer } from './PlayerContext';
 import { YouTubePlayer } from './providers/YouTubePlayer';
 import { SpotifyEmbedPreview } from './providers/SpotifyEmbedPreview';
-import { Volume2, VolumeX, Maximize2, X, ChevronDown, ChevronUp, Play, Pause, Square } from 'lucide-react';
+import { Volume2, VolumeX, Maximize2, X, ChevronDown, ChevronUp, Play, Pause, Square, SkipBack, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const providerMeta = {
@@ -12,7 +12,14 @@ const providerMeta = {
   apple_music: { label: 'Apple Music', badge: '', color: 'bg-neutral-900/90' },
 } as const;
 
-export function EmbeddedPlayerDrawer() {
+type EmbeddedPlayerDrawerProps = {
+  onNext?: () => void;
+  onPrev?: () => void;
+  canNext?: boolean;
+  canPrev?: boolean;
+};
+
+export function EmbeddedPlayerDrawer({ onNext, onPrev, canNext, canPrev }: EmbeddedPlayerDrawerProps) {
   const {
     provider,
     trackId,
@@ -41,6 +48,10 @@ export function EmbeddedPlayerDrawer() {
     collapseToMini,
     restoreFromMini,
     setMiniPosition,
+    queue,
+    queueIndex,
+    nextTrack,
+    previousTrack,
   } = usePlayer();
   const cinemaRef = useRef<HTMLDivElement | null>(null);
   const autoplay = isPlaying;
@@ -51,6 +62,8 @@ export function EmbeddedPlayerDrawer() {
   const positionSec = safeMs(positionMs) / 1000;
   const durationSec = Math.max(positionSec, safeMs(durationMs) / 1000);
   const volumePercent = Math.round((isMuted ? 0 : Number.isFinite(volume) ? volume : 0) * 100);
+  const effectiveCanNext = canNext ?? queue.length > 1;
+  const effectiveCanPrev = canPrev ?? queue.length > 1;
 
   const meta = useMemo(() => {
     const fallback = { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90' };
@@ -141,9 +154,9 @@ export function EmbeddedPlayerDrawer() {
           exit={{ y: -20, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           data-player="universal"
-          className="pointer-events-auto fixed top-14 md:top-16 left-1/2 -translate-x-1/2 z-[70] w-[90vw] md:w-[45%] min-w-[280px]"
+          className="pointer-events-auto fixed bottom-4 left-0 -translate-x-0 z-[9999] w-full rounded-none md:left-1/2 md:-translate-x-1/2 md:w-[min(720px,calc(100vw-32px))]"
         >
-        <div className={`overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
+          <div className={`overflow-hidden rounded-none md:rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
           {/* Header - Always visible, compact on mobile */}
           <div className="flex items-center gap-3 px-3 py-2 md:px-4 md:py-2.5 bg-background/80 backdrop-blur">
             <span className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-background/80 text-lg md:text-xl shadow-inner">
@@ -161,12 +174,32 @@ export function EmbeddedPlayerDrawer() {
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                onClick={() => (effectiveCanPrev ? (onPrev ? onPrev() : previousTrack()) : null)}
+                disabled={!effectiveCanPrev}
+                className="inline-flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Previous track"
+                title="Previous track"
+              >
+                <SkipBack className="h-4 w-4 md:h-5 md:w-5" />
+              </button>
+              <button
+                type="button"
                 onClick={togglePlayPause}
                 className="inline-flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border-2 border-primary/70 bg-primary/20 text-primary transition hover:border-primary hover:bg-primary hover:text-white"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? <Pause className="h-4 w-4 md:h-5 md:w-5" /> : <Play className="h-4 w-4 md:h-5 md:w-5" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => (effectiveCanNext ? (onNext ? onNext() : nextTrack()) : null)}
+                disabled={!effectiveCanNext}
+                className="inline-flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next track"
+                title="Next track"
+              >
+                <SkipForward className="h-4 w-4 md:h-5 md:w-5" />
               </button>
               <button
                 type="button"
