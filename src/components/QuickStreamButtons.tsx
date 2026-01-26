@@ -122,8 +122,8 @@ export function QuickStreamButtons({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <motion.button
-        whileHover={{ scale: hasSpotify ? 1.1 : 1 }}
-        whileTap={{ scale: hasSpotify ? 0.95 : 1 }}
+        whileHover={{ scale: hasSpotify ? 1.05 : 1 }}
+        whileTap={{ scale: hasSpotify ? 0.97 : 1 }}
         onClick={hasSpotify ? handleSpotifyClick : undefined}
         data-provider="spotify"
         disabled={!hasSpotify}
@@ -131,8 +131,8 @@ export function QuickStreamButtons({
           sizeClasses[size],
           'rounded-full flex items-center justify-center transition-all',
           hasSpotify
-            ? 'bg-[#1DB954] hover:bg-[#1ed760] text-white shadow-lg'
-            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-70',
+            ? 'bg-black text-white shadow-lg'
+            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-60',
           preferredProvider === 'spotify' && hasSpotify && 'ring-2 ring-white ring-offset-2 ring-offset-background'
         )}
         title={hasSpotify ? 'Play in Spotify' : 'Spotify unavailable'}
@@ -142,8 +142,8 @@ export function QuickStreamButtons({
       </motion.button>
 
       <motion.button
-        whileHover={{ scale: hasYouTube ? 1.1 : 1 }}
-        whileTap={{ scale: hasYouTube ? 0.95 : 1 }}
+        whileHover={{ scale: hasYouTube ? 1.05 : 1 }}
+        whileTap={{ scale: hasYouTube ? 0.97 : 1 }}
         onClick={hasYouTube ? handleYouTubeClick : undefined}
         data-provider="youtube"
         disabled={!hasYouTube}
@@ -151,8 +151,8 @@ export function QuickStreamButtons({
           sizeClasses[size],
           'rounded-full flex items-center justify-center transition-all',
           hasYouTube
-            ? 'bg-[#FF0000] hover:bg-[#cc0000] text-white shadow-lg'
-            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-70',
+            ? 'bg-black text-white shadow-lg'
+            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-60',
           preferredProvider === 'youtube' && hasYouTube && 'ring-2 ring-white ring-offset-2 ring-offset-background'
         )}
         title={hasYouTube ? 'Play on YouTube' : 'YouTube unavailable'}
