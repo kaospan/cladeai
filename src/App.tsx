@@ -30,7 +30,9 @@ const ArtistPage = lazy(() => import("./pages/ArtistPage"));
 const TrackDetailPage = lazy(() => import("./pages/TrackDetailPage"));
 const PlaylistsPage = lazy(() => import("./pages/PlaylistsPage"));
 const PlaylistDetailPage = lazy(() => import("./pages/PlaylistDetailPage"));
-const ForumHomePage = lazy(() => import("./pages/ForumHomePage"));
+const ForumHomePage = lazy(() =>
+  import("./pages/ForumHomePage").then((module) => ({ default: module.ForumHomePage }))
+);
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminPerformanceDashboard = lazy(() => import("./components/AdminPerformanceDashboard"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
