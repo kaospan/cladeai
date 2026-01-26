@@ -166,3 +166,4 @@ export function QuickStreamButtons({
 
 // Export individual icons for reuse
 export { SpotifyIcon, AppleMusicIcon, YouTubeIcon };
+export default QuickStreamButtons;
