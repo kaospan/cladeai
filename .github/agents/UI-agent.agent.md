@@ -1,7 +1,5 @@
----
 name: UI-agent
 description: Clade UI/UX agent for responsive music discovery interfaces (TikTok-style feeds, universal-player-safe layouts).
-model: gpt-4o
 target: vscode
 tools: []
 ---
