@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
 import { recordPlayEvent } from '@/api/playEvents';
 import { MusicProvider } from '@/types';
 import { getPreferredProvider } from '@/lib/preferences';
@@ -17,6 +17,10 @@ export interface PlayerState {
   lastKnownTitle: string | null;
   lastKnownArtist: string | null;
   lastKnownAlbum: string | null;
+  positionMs: number;
+  durationMs: number;
+  volume: number; // 0..1
+  isMuted: boolean;
   spotifyOpen: boolean;
   youtubeOpen: boolean;
   spotifyTrackId: string | null;
@@ -33,6 +37,15 @@ export interface PlayerState {
   queue: import('@/types').Track[];
   queueIndex: number;
 }
+
+type ProviderControls = {
+  play: (startSec?: number | null) => Promise<void> | void;
+  pause: () => Promise<void> | void;
+  seekTo: (seconds: number) => Promise<void> | void;
+  setVolume: (volume: number) => Promise<void> | void; // 0..1
+  setMute: (muted: boolean) => Promise<void> | void;
+  teardown?: () => Promise<void> | void;
+};
 
 type OpenPlayerPayload = {
   canonicalTrackId: string | null;
@@ -60,6 +73,10 @@ interface PlayerContextValue extends PlayerState {
   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
   seekTo: (sec: number) => void;
   clearSeek: () => void;
+  seekToMs: (ms: number) => void;
+  togglePlayPause: () => void;
+  setVolumeLevel: (volume: number) => void;
+  toggleMute: () => void;
   setCurrentSection: (sectionId: string | null) => void;
   setIsPlaying: (playing: boolean) => void;
   setMinimized: (value: boolean) => void;
@@ -68,6 +85,8 @@ interface PlayerContextValue extends PlayerState {
   setMiniPosition: (pos: { x: number; y: number }) => void;
   enterCinema: () => void;
   exitCinema: () => void;
+  registerProviderControls: (provider: MusicProvider, controls: ProviderControls) => void;
+  updatePlaybackState: (updates: Partial<Pick<PlayerState, 'positionMs' | 'durationMs' | 'isPlaying' | 'volume' | 'isMuted' | 'trackTitle' | 'trackArtist' | 'trackAlbum' | 'lastKnownTitle' | 'lastKnownArtist' | 'lastKnownAlbum'>>) => void;
   addToQueue: (track: import('@/types').Track) => void;
   playFromQueue: (index: number) => void;
   removeFromQueue: (index: number) => void;
