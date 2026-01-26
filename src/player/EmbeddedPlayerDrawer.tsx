@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { usePlayer } from './PlayerContext';
 import { YouTubePlayer } from './providers/YouTubePlayer';
 import { SpotifyEmbedPreview } from './providers/SpotifyEmbedPreview';
-import { Volume2, VolumeX, Maximize2, X, ChevronDown, ChevronUp, Play, Pause } from 'lucide-react';
+import { Volume2, VolumeX, Maximize2, X, ChevronDown, ChevronUp, Play, Pause, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const providerMeta = {
@@ -120,18 +120,18 @@ export function EmbeddedPlayerDrawer() {
 
   return (
     <>
-      {/* Single Interchangeable Player - EXACT same position for Spotify & YouTube */}
+      {/* Single Interchangeable Player - positioned inside navbar area, draggable across screen */}
       {!isMini && (
         <motion.div
-          drag={isMinimized ? "y" : false}
-          dragConstraints={{ top: 0, bottom: 200 }}
-          dragElastic={0.1}
-          initial={{ y: 48, opacity: 0 }}
+          drag
+          dragConstraints={{ left: -window.innerWidth / 2, right: window.innerWidth / 2, top: -60, bottom: window.innerHeight }}
+          dragElastic={0.15}
+          initial={{ y: 0, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 48, opacity: 0 }}
+          exit={{ y: -20, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           data-player="universal"
-          className="pointer-events-auto fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100vw-2rem)] max-w-3xl px-2 md:px-0"
+          className="pointer-events-auto fixed top-14 md:top-16 left-1/2 -translate-x-1/2 z-[70] w-[90vw] md:w-[45%] min-w-[280px]"
         >
         <div className={`overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br ${meta.color} shadow-2xl backdrop-blur-xl`}>
           {/* Header - Always visible, compact on mobile */}
@@ -148,30 +148,33 @@ export function EmbeddedPlayerDrawer() {
                 <span className="text-[11px] md:text-xs text-muted-foreground truncate" aria-label="Artist name">{resolvedArtist}</span>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={togglePlayPause}
-                className="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground"
+                className="inline-flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border-2 border-primary/70 bg-primary/20 text-primary transition hover:border-primary hover:bg-primary hover:text-white"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
+                title={isPlaying ? 'Pause' : 'Play'}
               >
-                {isPlaying ? <Pause className="h-3 w-3 md:h-4 md:w-4" /> : <Play className="h-3 w-3 md:h-4 md:w-4" />}
+                {isPlaying ? <Pause className="h-4 w-4 md:h-5 md:w-5" /> : <Play className="h-4 w-4 md:h-5 md:w-5" />}
               </button>
               <button
                 type="button"
                 onClick={collapseToMini}
                 className="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground"
-                aria-label="Collapse to mini player"
+                aria-label="Minimize to mini player"
+                title="Minimize"
               >
                 <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />
               </button>
               <button
                 type="button"
                 onClick={closePlayer}
-                className="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-background hover:text-foreground"
-                aria-label="Close player"
+                className="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border border-border/70 bg-muted/60 text-muted-foreground transition hover:border-border hover:bg-destructive/30 hover:text-destructive"
+                aria-label="Stop playback"
+                title="Stop playback"
               >
-                <X className="h-3 w-3 md:h-4 md:w-4" />
+                <Square className="h-3 w-3 md:h-4 md:w-4" />
               </button>
             </div>
           </div>
