@@ -63,7 +63,7 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
     updatePlaybackState,
   } = usePlayer();
 
-  const playerRef = useRef<Spotify.Player | null>(null);
+  const playerRef = useRef<SpotifyPlayer | null>(null);
   const deviceIdRef = useRef<string | null>(null);
   const tokenRef = useRef<string | null>(null);
   const volumeRef = useRef<number>(volume);
