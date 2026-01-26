@@ -1043,6 +1043,51 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+
+            {lastFmStats.recentTracks.length > 0 && (
+              <div className="p-4 glass rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[#D51007]" />
+                  <h4 className="text-sm font-medium text-muted-foreground">Latest scrobbles</h4>
+                </div>
+                <div className="space-y-2">
+                  {lastFmStats.recentTracks.map((track, idx) => (
+                    <div
+                      key={`${track.name}-${track.artist}-${idx}`}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30"
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {track.imageUrl ? (
+                          <img src={track.imageUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{track.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                        <p className="text-[11px] text-muted-foreground/80">
+                          {track.nowPlaying ? 'Now playing' : track.playedAt ? formatRelativeTime(track.playedAt) : 'Recently played'}
+                        </p>
+                      </div>
+                      <QuickStreamButtons
+                        track={{
+                          spotifyId: undefined,
+                          youtubeId: undefined,
+                        }}
+                        canonicalTrackId={null}
+                        trackTitle={track.name}
+                        trackArtist={track.artist}
+                        size="sm"
+                        className="flex-shrink-0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
