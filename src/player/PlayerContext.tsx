@@ -170,7 +170,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Failed to hydrate queue from storage', err);
     }
-  }, []);
+  }, [state.provider]);
 
   // Persist queue to localStorage when it changes
   useEffect(() => {
@@ -188,7 +188,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const seekTo = useCallback((sec: number) => {
     setState((prev) => ({ ...prev, seekToSec: sec, positionMs: sec * 1000 }));
-  }, []);
+  }, [state.provider]);
 
   const clearSeek = useCallback(() => {
     setState((prev) => ({ ...prev, seekToSec: null }));
@@ -614,7 +614,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         console.error('Failed to record provider switch event', err);
       });
     }
-  }, [state.canonicalTrackId]);
+  }, [state.canonicalTrackId, state.provider]);
 
   const isOpen = !!state.provider && !!state.trackId;
 
