@@ -173,6 +173,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     queueIndex: -1,
   });
   const providerControlsRef = useRef<Partial<Record<MusicProvider, ProviderControls>>>({});
+  const activeProviderRef = useRef<MusicProvider | null>(null);
+
+  useEffect(() => {
+    activeProviderRef.current = state.provider;
+  }, [state.provider]);
 
   // Hydrate queue from localStorage on mount
   useEffect(() => {
@@ -427,7 +432,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   // High-level play/pause/stop helpers (single definitions)
   const play = useCallback((canonicalTrackId: string | null, provider: MusicProvider, providerTrackId?: string | null, startSec?: number) => {
-    const prevProvider = state.provider;
+    const prevProvider = activeProviderRef.current;
     if (prevProvider && prevProvider !== provider) {
       void stopActiveProvider(prevProvider, providerControlsRef);
     }
@@ -477,6 +482,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const stop = useCallback(() => {
+    void stopActiveProvider(activeProviderRef.current, providerControlsRef);
     setState((prev) => ({
       ...prev,
       isPlaying: false,
@@ -499,11 +505,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const openPlayer = useCallback((payload: OpenPlayerPayload) => {
-    const prevProvider = state.provider;
+    const prevProvider = activeProviderRef.current;
     if (prevProvider && prevProvider !== payload.provider) {
-      providerControlsRef.current[prevProvider]?.pause?.();
-      providerControlsRef.current[prevProvider]?.setMute?.(true);
-      providerControlsRef.current[prevProvider]?.teardown?.();
+      void stopActiveProvider(prevProvider, providerControlsRef);
     }
 
     setState((prev) => {
@@ -578,11 +582,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const switchProvider = useCallback((provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => {
-    const prevProvider = state.provider;
+    const prevProvider = activeProviderRef.current;
     if (prevProvider && prevProvider !== provider) {
-      providerControlsRef.current[prevProvider]?.pause?.();
-      providerControlsRef.current[prevProvider]?.setMute?.(true);
-      providerControlsRef.current[prevProvider]?.teardown?.();
+      void stopActiveProvider(prevProvider, providerControlsRef);
     }
 
     setState((prev) => {
