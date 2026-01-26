@@ -893,30 +893,64 @@ export default function ProfilePage() {
                 </TabsContent>
               )}
 
-              <TabsContent value="recent" className="mt-4">
-                <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 3 }} gap="sm">
-                {recentlyPlayed?.tracks?.map((track) => (
-                  <div key={track.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
-                      {track.cover_url ? (
-                        <img src={track.cover_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Music className="w-4 h-4 text-muted-foreground" />
+              {recentlyPlayed?.tracks?.length ? (
+                <TabsContent value="recent" className="mt-4">
+                  <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 3 }} gap="sm">
+                  {recentlyPlayed.tracks
+                    .filter((track) => track.spotifyId || track.spotify_id || track.youtubeId || track.youtube_id)
+                    .map((track) => (
+                      <div
+                        key={track.id}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group"
+                        onClick={() => handlePlayTrack(track)}
+                      >
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted">
+                          {track.cover_url ? (
+                            <img src={track.cover_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Music className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{track.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
-                    </div>
-                  </div>
-                ))}
-                </ResponsiveGrid>
-                {(!recentlyPlayed?.tracks || recentlyPlayed.tracks.length === 0) && (
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{track.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                          {track.played_at && (
+                            <p className="text-[11px] text-muted-foreground/80">{formatRelativeTime(track.played_at)}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlayTrack(track);
+                            }}
+                            className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90"
+                            aria-label="Play"
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                          <QuickStreamButtons
+                            track={{
+                              spotifyId: track.spotifyId || track.spotify_id,
+                              youtubeId: track.youtubeId || track.youtube_id,
+                            }}
+                            canonicalTrackId={track.id}
+                            trackTitle={track.title}
+                            trackArtist={track.artist}
+                            size="sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </ResponsiveGrid>
+                </TabsContent>
+              ) : (
+                <TabsContent value="recent" className="mt-4">
                   <p className="text-sm text-muted-foreground text-center py-8">No recent plays. Start listening now!</p>
-                )}
-              </TabsContent>
+                </TabsContent>
+              )}
             </Tabs>
           </motion.div>
         )}
