@@ -85,10 +85,6 @@ interface PlayerContextValue extends PlayerState {
   pause: () => void;
   stop: () => void;
   closePlayer: () => void;
-  /** High-level play API: canonicalTrackId may be the app track id (optional), provider selects the provider, providerTrackId is the provider-specific id, startSec optional */
-  play: (canonicalTrackId: string | null, provider: MusicProvider, providerTrackId?: string | null, startSec?: number) => void;
-  pause: () => void;
-  stop: () => void;
   closeSpotify: () => void;
   closeYoutube: () => void;
   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
