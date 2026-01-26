@@ -49,6 +49,21 @@ type ProviderControls = {
   teardown?: () => Promise<void> | void;
 };
 
+const stopActiveProvider = async (
+  active: MusicProvider | null,
+  controlsRef: React.MutableRefObject<Partial<Record<MusicProvider, ProviderControls>>>
+) => {
+  if (!active) return;
+  const ctrl = controlsRef.current[active];
+  try {
+    await ctrl?.pause?.();
+    await ctrl?.setMute?.(true);
+    await ctrl?.teardown?.();
+  } catch (err) {
+    console.warn('[Player] stopActiveProvider failed', err);
+  }
+};
+
 type OpenPlayerPayload = {
   canonicalTrackId: string | null;
   provider: MusicProvider;
