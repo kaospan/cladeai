@@ -86,18 +86,84 @@ export async function findSimilarTracks(
 
 /**
  * Find tracks matching a specific progression pattern
+ * Supports progression rotation matching
  */
 export async function findByProgression(
   progression: RomanChord[],
-  options?: { max_results?: number; allow_transposition?: boolean }
+  options?: { max_results?: number; allow_rotation?: boolean }
 ): Promise<SimilarityResult[]> {
   const maxResults = options?.max_results || DEFAULT_MAX_RESULTS;
+  const allowRotation = options?.allow_rotation ?? true;
   
-  // TODO: Query database for tracks with matching progression
-  // If allow_transposition, also check rotated versions
-  // e.g., [I, V, vi, IV] matches [V, vi, IV, I] rotated
-  
-  return [];
+  try {
+    // Query database for candidate tracks
+    const { data: candidates, error } = await supabase
+      .from('harmonic_fingerprints')
+      .select('*')
+      .gte('confidence_score', 0.5) // Minimum confidence threshold
+      .order('confidence_score', { ascending: false })
+      .limit(maxResults * 3); // Over-fetch for filtering
+
+    if (error) {
+      console.error('[SimilarityEngine] Query error:', error);
+      return [];
+    }
+
+    if (!candidates || candidates.length === 0) {
+      return [];
+    }
+
+    // Score and filter matches
+    const results: SimilarityResult[] = [];
+
+    for (const candidate of candidates as HarmonicFingerprint[]) {
+      const candidateProg = candidate.roman_progression;
+
+      // Direct match
+      const directScore = compareProgressions(progression, candidateProg);
+      let bestScore = directScore;
+      let rotationOffset: number | undefined;
+      let matchedWithRotation = false;
+
+      // Check rotations if enabled
+      if (allowRotation && candidateProg.length === progression.length) {
+        for (let offset = 1; offset < candidateProg.length; offset++) {
+          const rotated = rotateProgression(candidateProg, offset);
+          const rotatedScore = compareProgressions(progression, rotated);
+          
+          if (rotatedScore > bestScore) {
+            bestScore = rotatedScore;
+            rotationOffset = offset;
+            matchedWithRotation = true;
+          }
+        }
+      }
+
+      // If score is high enough, add to results
+      if (bestScore >= 0.6) {
+        results.push({
+          track_id: candidate.track_id,
+          similarity_score: bestScore,
+          matching_features: {
+            shared_progression_shape: true,
+            cadence_match: candidate.cadence_type,
+            rotation_offset: matchedWithRotation ? rotationOffset : undefined,
+          },
+          explanation: matchedWithRotation
+            ? `Matches progression with ${rotationOffset}-chord rotation (${(bestScore * 100).toFixed(0)}% similarity)`
+            : `Direct progression match (${(bestScore * 100).toFixed(0)}% similarity)`,
+        });
+      }
+    }
+
+    // Sort by score and limit
+    return results
+      .sort((a, b) => b.similarity_score - a.similarity_score)
+      .slice(0, maxResults);
+  } catch (error) {
+    console.error('[SimilarityEngine] Error in findByProgression:', error);
+    return [];
+  }
 }
 
 /**
