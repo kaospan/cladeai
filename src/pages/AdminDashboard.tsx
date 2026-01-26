@@ -1,19 +1,33 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageLayout } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAdminStats, useFlaggedContent } from '@/hooks/api/useAdmin';
+import { useAdminStats, useFlaggedContent, useAdminUsers } from '@/hooks/api/useAdmin';
 import { useLatestTestRuns, useTestRunHistory } from '@/hooks/api/useTestRuns';
-import { Users, Music, PlayCircle, Heart, AlertTriangle } from 'lucide-react';
+import { Users, Music, PlayCircle, Heart, AlertTriangle, Search, Inbox } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [userSearch, setUserSearch] = useState('');
+  const [userOffset, setUserOffset] = useState(0);
+  const userLimit = 20;
   const { data: stats, isLoading: statsLoading } = useAdminStats();
-  const { data: flaggedContent } = useFlaggedContent();
+  const { data: flaggedContent = [], isLoading: flaggedLoading, isError: flaggedError } = useFlaggedContent();
+  const { data: usersData, isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useAdminUsers(userSearch, userLimit, userOffset);
   const { data: latestRuns = [] } = useLatestTestRuns();
   const { data: history = [] } = useTestRunHistory(50);
+
+  const totalUsers = usersData?.total ?? 0;
+  const totalUserPages = useMemo(
+    () => (totalUsers > 0 ? Math.ceil(totalUsers / userLimit) : 1),
+    [totalUsers]
+  );
+  const currentUserPage = Math.floor(userOffset / userLimit) + 1;
 
   const metrics = [
     {
@@ -120,16 +134,105 @@ export default function AdminDashboard() {
 
           <TabsContent value="users" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage user accounts, roles, and permissions
-                </CardDescription>
+              <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Search and browse user accounts</CardDescription>
+                </div>
+                <div className="flex w-full max-w-md gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={userSearch}
+                      onChange={(e) => {
+                        setUserSearch(e.target.value);
+                        setUserOffset(0);
+                      }}
+                      placeholder="Search username or email"
+                      className="pl-9"
+                    />
+                  </div>
+                  <Button variant="outline" onClick={() => refetchUsers()}>Refresh</Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  User management panel will be added here
-                </p>
+                {usersError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>Failed to load users.</AlertDescription>
+                  </Alert>
+                )}
+
+                {usersLoading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : usersData?.users && usersData.users.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-muted-foreground">
+                            <th className="py-2 pr-3">Username</th>
+                            <th className="py-2 pr-3">Email</th>
+                            <th className="py-2 pr-3">Roles</th>
+                            <th className="py-2 pr-3">Joined</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {usersData.users.map((user) => (
+                            <tr key={user.id} className="border-t border-border/60">
+                              <td className="py-2 pr-3 font-medium">{user.username || '—'}</td>
+                              <td className="py-2 pr-3 text-muted-foreground">{user.email || '—'}</td>
+                              <td className="py-2 pr-3 text-muted-foreground">
+                                {Array.isArray(user.user_roles) && user.user_roles.length > 0
+                                  ? user.user_roles.map((r: { role: string }) => r.role).join(', ')
+                                  : '—'}
+                              </td>
+                              <td className="py-2 pr-3 text-muted-foreground">
+                                {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        Showing {userOffset + 1}-{Math.min(userOffset + userLimit, totalUsers)} of {totalUsers}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentUserPage === 1}
+                          onClick={() => setUserOffset((prev) => Math.max(prev - userLimit, 0))}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          Page {currentUserPage} / {totalUserPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentUserPage >= totalUserPages}
+                          onClick={() => setUserOffset((prev) => prev + userLimit)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+                    <Inbox className="h-10 w-10" />
+                    <p>No users found</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -143,10 +246,41 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {flaggedContent && flaggedContent.length > 0 ? (
-                  <p className="text-muted-foreground">
-                    {flaggedContent.length} items awaiting review
-                  </p>
+                {flaggedError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>Failed to load flagged content.</AlertDescription>
+                  </Alert>
+                )}
+
+                {flaggedLoading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : flaggedContent && flaggedContent.length > 0 ? (
+                  <div className="space-y-3">
+                    {flaggedContent.map((item) => (
+                      <div key={item.id} className="p-4 border rounded-lg bg-muted/40">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{item.track?.title || 'Unknown track'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.track?.artist || 'Unknown artist'}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Flagged by {item.user?.username || 'Unknown user'} · {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}
+                            </p>
+                          </div>
+                          <Badge variant="outline">Flag</Badge>
+                        </div>
+                        {item.notes && (
+                          <p className="text-sm text-muted-foreground mt-2">{item.notes}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <p className="text-muted-foreground">No flagged content</p>
                 )}

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Feed' },
+  { to: '/feed', icon: Home, label: 'Feed' },
   { to: '/forum', icon: MessageSquare, label: 'Forums' },
   { to: '/search', icon: Search, label: 'Search' },
   { to: '/playlists', icon: ListMusic, label: 'Lists' },
