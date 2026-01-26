@@ -170,15 +170,32 @@ export async function queueAnalysis(request: AnalysisJobRequest): Promise<Analys
     has_isrc: !!request.isrc,
   });
 
-  // TODO: Trigger Edge Function for async processing
-  // await supabase.functions.invoke('harmonic-analysis', { body: request });
-
-  // For now, simulate async analysis
-  setTimeout(() => {
-    runAnalysisJob(job, request).catch(err => {
-      console.error('[AnalysisJob] Async execution error:', err);
+  // Trigger Edge Function for async processing
+  supabase.functions
+    .invoke('harmonic-analysis', {
+      body: {
+        track_id: request.track_id,
+        audio_hash: request.audio_hash,
+        isrc: request.isrc,
+        priority: request.priority ?? 'normal',
+      },
+    })
+    .then(({ data, error }) => {
+      if (error) {
+        console.error('[AnalysisJob] Edge Function error:', error);
+      } else {
+        console.log('[AnalysisJob] Edge Function result:', data);
+      }
+    })
+    .catch(err => {
+      console.error('[AnalysisJob] Edge Function invocation failed:', err);
+      // Fallback to local processing if Edge Function unavailable
+      setTimeout(() => {
+        runAnalysisJob(job, request).catch(err => {
+          console.error('[AnalysisJob] Async execution error:', err);
+        });
+      }, 100);
     });
-  }, 100);
 
   return job;
 }
