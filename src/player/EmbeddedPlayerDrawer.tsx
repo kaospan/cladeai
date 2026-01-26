@@ -190,8 +190,9 @@ export function EmbeddedPlayerDrawer() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 px-3 pb-3 md:px-4 md:pb-4 text-white">
-            <span className="text-[11px] md:text-xs tabular-nums" aria-label="Elapsed time">{formatTime(positionSec)}</span>
+          {/* Compact Controls Row: Seekbar + Volume inline */}
+          <div className="flex items-center gap-2 px-3 pb-3 md:px-4 md:pb-4 text-white">
+            <span className="text-[10px] md:text-xs tabular-nums" aria-label="Elapsed time">{formatTime(positionSec)}</span>
             <input
               type="range"
               min="0"
@@ -199,20 +200,20 @@ export function EmbeddedPlayerDrawer() {
               value={Math.min(positionSec, durationSec)}
               onChange={(e) => seekToMs(Number(e.target.value) * 1000)}
               disabled={isIdle}
-              className="flex-1 min-w-[120px] h-1 bg-white/20 rounded-full appearance-none cursor-pointer
+              className="flex-1 min-w-[80px] h-1 bg-white/20 rounded-full appearance-none cursor-pointer
                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 
                        [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full 
                        [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
               aria-label="Seek"
             />
-            <span className="text-[11px] md:text-xs tabular-nums" aria-label="Total duration">{formatTime(durationSec)}</span>
+            <span className="text-[10px] md:text-xs tabular-nums" aria-label="Total duration">{formatTime(durationSec)}</span>
 
             <button
               onClick={toggleMute}
-              className="p-2 text-white/80 hover:text-white transition-colors rounded"
+              className="p-1.5 text-white/80 hover:text-white transition-colors rounded"
               aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted ? <VolumeX className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Volume2 className="w-3.5 h-3.5 md:w-4 md:h-4" />}
             </button>
             <input
               type="range"
@@ -220,20 +221,22 @@ export function EmbeddedPlayerDrawer() {
               max="100"
               value={volumePercent}
               onChange={(e) => setVolumeLevel(Number(e.target.value) / 100)}
-              className="w-24 md:w-32 h-1 bg-white/20 rounded-full appearance-none cursor-pointer
+              className="w-20 md:w-28 h-1 bg-white/20 rounded-full appearance-none cursor-pointer
                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 
                        [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full 
                        [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
               aria-label="Volume"
             />
 
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 text-white/80 hover:text-white transition-colors rounded"
-              aria-label={isCinema ? 'Exit cinema mode' : 'Enter cinema mode'}
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
+            {provider === 'youtube' && (
+              <button
+                onClick={toggleFullscreen}
+                className="p-1.5 text-white/80 hover:text-white transition-colors rounded"
+                aria-label={isCinema ? 'Exit cinema mode' : 'Enter cinema mode'}
+              >
+                <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              </button>
+            )}
           </div>
         </div>
 

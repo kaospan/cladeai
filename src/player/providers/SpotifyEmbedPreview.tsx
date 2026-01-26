@@ -263,9 +263,16 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
     const device = deviceIdRef.current || spotifyDeviceId;
     if (!token || !device) return;
 
-    void transferPlayback(device, token, autoplay ?? autoplaySpotify ?? false);
+    const shouldPlay = autoplay ?? autoplaySpotify ?? false;
+    void transferPlayback(device, token, shouldPlay);
     void startPlayback(device, token, providerTrackId, seekToSec ?? 0);
-  }, [provider, providerTrackId, ready, autoplay, autoplaySpotify, seekToSec]);
+    
+    // Ensure audible volume after transfer
+    if (playerRef.current && !isMuted) {
+      const vol = Math.max(volumeRef.current, MIN_AUDIBLE_VOLUME);
+      playerRef.current.setVolume(vol).catch(() => {});
+    }
+  }, [provider, providerTrackId, ready, autoplay, autoplaySpotify, seekToSec, isMuted]);
 
   if (provider !== 'spotify' || !providerTrackId) return null;
 
@@ -276,7 +283,7 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
 
 async function transferPlayback(deviceId: string, token: string, play: boolean) {
   try {
-    await fetch('https://api.spotify.com/v1/me/player', {
+    const res = await fetch('https://api.spotify.com/v1/me/player', {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -284,14 +291,19 @@ async function transferPlayback(deviceId: string, token: string, play: boolean) 
       },
       body: JSON.stringify({ device_ids: [deviceId], play }),
     });
+    if (!res.ok) {
+      console.warn(`[Spotify] Transfer failed: ${res.status} ${res.statusText}`);
+    } else {
+      console.log('[Spotify] Transfer successful, play:', play);
+    }
   } catch (err) {
-    console.error('Failed to transfer Spotify playback', err);
+    console.error('[Spotify] Failed to transfer playback', err);
   }
 }
 
 async function startPlayback(deviceId: string, token: string, trackId: string, startSec: number) {
   try {
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+    const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -302,7 +314,12 @@ async function startPlayback(deviceId: string, token: string, trackId: string, s
         position_ms: Math.max(0, Math.floor(startSec * 1000)),
       }),
     });
+    if (!res.ok) {
+      console.warn(`[Spotify] Start playback failed: ${res.status} ${res.statusText}`);
+    } else {
+      console.log('[Spotify] Start playback successful for track:', trackId);
+    }
   } catch (err) {
-    console.error('Failed to start Spotify playback', err);
+    console.error('[Spotify] Failed to start playback', err);
   }
 }
