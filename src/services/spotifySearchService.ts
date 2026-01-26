@@ -39,8 +39,9 @@ interface SpotifySearchResult {
 export async function searchSpotify(
   userId: string,
   query: string,
-  limit = 20
-): Promise<Track[]> {
+  limit = 50,
+  offset = 0
+): Promise<{ tracks: Track[]; total: number }> {
   const accessToken = await getValidAccessToken(userId);
   
   if (!accessToken) {
@@ -53,6 +54,7 @@ export async function searchSpotify(
       q: query,
       type: 'track',
       limit: Math.min(limit, 50).toString(),
+      offset: Math.max(0, offset).toString(),
       market: 'US',
     });
 
@@ -77,26 +79,29 @@ export async function searchSpotify(
 
     const data: SpotifySearchResult = await response.json();
 
-    return data.tracks.items.map((track) => ({
-      id: `spotify:${track.id}`,
-      title: track.name,
-      artist: track.artists.map((a) => a.name).join(', '),
-      artists: track.artists.map((a) => a.name),
-      album: track.album.name,
-      cover_url: track.album.images[0]?.url,
-      artwork_url: track.album.images[0]?.url,
-      duration_ms: track.duration_ms,
-      preview_url: track.preview_url,
-      spotify_id: track.id,
-      url_spotify_web: track.external_urls.spotify,
-      url_spotify_app: track.uri,
-      provider: 'spotify' as const,
-      external_id: track.id,
-      isrc: track.external_ids?.isrc,
-    }));
+    return {
+      total: data.tracks.total,
+      tracks: data.tracks.items.map((track) => ({
+        id: `spotify:${track.id}`,
+        title: track.name,
+        artist: track.artists.map((a) => a.name).join(', '),
+        artists: track.artists.map((a) => a.name),
+        album: track.album.name,
+        cover_url: track.album.images[0]?.url,
+        artwork_url: track.album.images[0]?.url,
+        duration_ms: track.duration_ms,
+        preview_url: track.preview_url,
+        spotify_id: track.id,
+        url_spotify_web: track.external_urls.spotify,
+        url_spotify_app: track.uri,
+        provider: 'spotify' as const,
+        external_id: track.id,
+        isrc: track.external_ids?.isrc,
+      })),
+    };
   } catch (error) {
     console.error('Error searching Spotify:', error);
-    return [];
+    return { tracks: [], total: 0 };
   }
 }
 
