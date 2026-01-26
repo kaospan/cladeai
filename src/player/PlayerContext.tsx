@@ -544,6 +544,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const switchProvider = useCallback((provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => {
+    const prevProvider = state.provider;
+    if (prevProvider && prevProvider !== provider) {
+      providerControlsRef.current[prevProvider]?.pause?.();
+      providerControlsRef.current[prevProvider]?.setMute?.(true);
+      providerControlsRef.current[prevProvider]?.teardown?.();
+    }
+
     setState((prev) => {
       const updates: Partial<PlayerState> = {
         canonicalTrackId: canonicalTrackId ?? prev.canonicalTrackId,
@@ -551,12 +558,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         provider,
         trackId: providerTrackId ?? prev.trackId,
         trackTitle: prev.trackTitle ?? prev.lastKnownTitle,
-        trackArtist: prev.trackArtist ?? prev.lastKnownArtist,
+        trackArtist: dedupeArtists(prev.trackArtist ?? prev.lastKnownArtist),
         trackAlbum: prev.trackAlbum ?? prev.lastKnownAlbum,
         isMinimized: false,
         isMini: false,
         isCinema: false,
         isPlaying: true,
+        isMuted: false,
       };
 
       if (provider === 'spotify') {
@@ -652,7 +660,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     closeYoutube,
     switchProvider,
     seekTo,
+    seekToMs,
     clearSeek,
+    togglePlayPause,
+    setVolumeLevel,
+    toggleMute,
     setCurrentSection,
     setIsPlaying,
     setMinimized,
@@ -661,6 +673,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setMiniPosition,
     enterCinema,
     exitCinema,
+    registerProviderControls,
+    updatePlaybackState,
     addToQueue,
     playFromQueue,
     removeFromQueue,
@@ -669,7 +683,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     shuffleQueue,
     nextTrack,
     previousTrack,
-  }), [state, isOpen, openPlayer, play, pause, stop, closePlayer, closeSpotify, closeYoutube, switchProvider, seekTo, clearSeek, setCurrentSection, setIsPlaying, setMinimized, addToQueue, playFromQueue, removeFromQueue, reorderQueue, clearQueue, shuffleQueue, nextTrack, previousTrack]);
+  }), [state, isOpen, openPlayer, play, pause, stop, closePlayer, closeSpotify, closeYoutube, switchProvider, seekTo, seekToMs, clearSeek, togglePlayPause, setVolumeLevel, toggleMute, setCurrentSection, setIsPlaying, setMinimized, collapseToMini, restoreFromMini, setMiniPosition, enterCinema, exitCinema, registerProviderControls, updatePlaybackState, addToQueue, playFromQueue, removeFromQueue, reorderQueue, clearQueue, shuffleQueue, nextTrack, previousTrack]);
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 }
