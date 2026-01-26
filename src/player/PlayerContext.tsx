@@ -583,6 +583,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const switchProvider = useCallback((provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => {
     const prevProvider = activeProviderRef.current;
+    const handoffStartSec = Math.floor(Math.max(0, state.positionMs) / 1000);
     if (prevProvider && prevProvider !== provider) {
       void stopActiveProvider(prevProvider, providerControlsRef);
     }
@@ -601,6 +602,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         isCinema: false,
         isPlaying: true,
         isMuted: false,
+        seekToSec: handoffStartSec,
       };
 
       if (provider === 'spotify') {
