@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
 import { Music } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { TrackProviderInfo, getProviderLinks } from '@/lib/providers';
 import { getPreferredProvider, setPreferredProvider } from '@/lib/preferences';
 import { usePlayer } from '@/player/PlayerContext';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface QuickStreamButtonsProps {
   track: TrackProviderInfo;
@@ -51,9 +52,30 @@ export function QuickStreamButtons({
   const youtubeLink = links.find((l) => l.provider === 'youtube');
   const preferredProvider = getPreferredProvider();
   const { openPlayer, positionMs, provider: currentProvider, canonicalTrackId: currentTrackId } = usePlayer();
+  const { user } = useAuth();
 
-  const hasSpotify = Boolean(track.spotifyId || spotifyLink);
-  const hasYouTube = Boolean(track.youtubeId || youtubeLink);
+  const normalizeSpotifyId = useCallback((raw?: string | null) => {
+    if (!raw) return null;
+    if (raw.startsWith('spotify:track:')) return raw.split(':').pop() || null;
+    const match = raw.match(/track\/(\w+)/);
+    if (match?.[1]) return match[1];
+    if (raw.includes('?')) return raw.split('?')[0].split('/').pop() || null;
+    return raw;
+  }, []);
+
+  const normalizeYoutubeId = useCallback((raw?: string | null) => {
+    if (!raw) return null;
+    const urlMatch = raw.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+    if (urlMatch?.[1]) return urlMatch[1];
+    if (raw.length === 11) return raw;
+    return raw;
+  }, []);
+
+  const spotifyTrackId = useMemo(() => normalizeSpotifyId(track.spotifyId || track.urlSpotifyWeb || track.urlSpotifyApp || spotifyLink?.webUrl || spotifyLink?.appUrl), [normalizeSpotifyId, track.spotifyId, track.urlSpotifyApp, track.urlSpotifyWeb, spotifyLink?.appUrl, spotifyLink?.webUrl]);
+  const youtubeTrackId = useMemo(() => normalizeYoutubeId(track.youtubeId || track.urlYoutube || youtubeLink?.webUrl), [normalizeYoutubeId, track.urlYoutube, track.youtubeId, youtubeLink?.webUrl]);
+
+  const hasSpotify = Boolean(spotifyTrackId);
+  const hasYouTube = Boolean(youtubeTrackId);
   const unavailable = !hasSpotify && !hasYouTube;
 
   // Check if this is the currently playing track
@@ -63,18 +85,26 @@ export function QuickStreamButtons({
   const handleSpotifyClick = useCallback(() => {
     if (!hasSpotify || !track.spotifyId) return;
     
+    // Guests cannot use the embedded Spotify SDK; open web player as a fallback
+    if (!user) {
+      if (spotifyLink?.webUrl) {
+        window.open(spotifyLink.webUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+
     setPreferredProvider('spotify');
     openPlayer({
       canonicalTrackId,
       provider: 'spotify',
-      providerTrackId: track.spotifyId,
+      providerTrackId: spotifyTrackId,
       autoplay: true,
       context: 'quick-stream',
       title: trackTitle,
       artist: trackArtist,
       startSec: currentPositionSec,
     });
-  }, [hasSpotify, canonicalTrackId, track.spotifyId, trackTitle, trackArtist, openPlayer, currentPositionSec]);
+  }, [hasSpotify, canonicalTrackId, trackTitle, trackArtist, openPlayer, currentPositionSec, user, spotifyTrackId, spotifyLink?.webUrl]);
 
   const handleYouTubeClick = useCallback(() => {
     if (!hasYouTube || !track.youtubeId) return;
@@ -83,14 +113,14 @@ export function QuickStreamButtons({
     openPlayer({
       canonicalTrackId,
       provider: 'youtube',
-      providerTrackId: track.youtubeId,
+      providerTrackId: youtubeTrackId,
       autoplay: true,
       context: 'quick-stream',
       title: trackTitle,
       artist: trackArtist,
       startSec: currentPositionSec,
     });
-  }, [hasYouTube, canonicalTrackId, track.youtubeId, trackTitle, trackArtist, openPlayer, currentPositionSec]);
+  }, [hasYouTube, canonicalTrackId, trackTitle, trackArtist, openPlayer, currentPositionSec, youtubeTrackId]);
 
   const sizeClasses = {
     sm: 'w-8 h-8',
