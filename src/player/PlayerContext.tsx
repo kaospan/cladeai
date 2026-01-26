@@ -101,6 +101,24 @@ const PlayerContext = createContext<PlayerContextValue | null>(null);
 
 const QUEUE_STORAGE_KEY = 'clade_queue_v1';
 
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+const dedupeArtists = (artist: string | null) => {
+  if (!artist) return null;
+  const seen = new Set<string>();
+  const parts = artist
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .filter((p) => {
+      const key = p.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  return parts.length ? parts.join(', ') : null;
+};
+
 const clampQueueIndex = (queueLength: number, index: number) => {
   if (queueLength === 0) return -1;
   return Math.max(0, Math.min(index, queueLength - 1));
@@ -137,6 +155,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     queue: [],
     queueIndex: -1,
   });
+  const providerControlsRef = useRef<Partial<Record<MusicProvider, ProviderControls>>>({});
 
   // Hydrate queue from localStorage on mount
   useEffect(() => {
