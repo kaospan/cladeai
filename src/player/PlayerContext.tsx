@@ -68,6 +68,10 @@ interface PlayerContextValue extends PlayerState {
   pause: () => void;
   stop: () => void;
   closePlayer: () => void;
+  /** High-level play API: canonicalTrackId may be the app track id (optional), provider selects the provider, providerTrackId is the provider-specific id, startSec optional */
+  play: (canonicalTrackId: string | null, provider: MusicProvider, providerTrackId?: string | null, startSec?: number) => void;
+  pause: () => void;
+  stop: () => void;
   closeSpotify: () => void;
   closeYoutube: () => void;
   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
@@ -406,6 +410,46 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         trackId: getPreferredProvider() === 'spotify' ? track.spotify_id : track.youtube_id,
       };
     });
+  }, []);
+
+  // High-level play/pause/stop helpers
+  const play = useCallback((canonicalTrackId: string | null, provider: MusicProvider, providerTrackId?: string | null, startSec?: number) => {
+    setState((prev) => {
+      const updates: Partial<PlayerState> = {
+        canonicalTrackId: canonicalTrackId ?? prev.canonicalTrackId,
+        seekToSec: startSec ?? null,
+      };
+
+      if (provider === 'spotify') {
+        updates.spotifyOpen = true;
+        updates.spotifyTrackId = providerTrackId ?? prev.spotifyTrackId;
+        updates.autoplaySpotify = true;
+        updates.youtubeOpen = false;
+        updates.autoplayYoutube = false;
+      } else {
+        updates.youtubeOpen = true;
+        updates.youtubeTrackId = providerTrackId ?? prev.youtubeTrackId;
+        updates.autoplayYoutube = true;
+        updates.spotifyOpen = false;
+        updates.autoplaySpotify = false;
+      }
+
+      updates.isPlaying = true;
+
+      return { ...prev, ...updates };
+    });
+
+    if (canonicalTrackId) {
+      recordPlayEvent({ track_id: canonicalTrackId, provider, action: 'preview', context: 'player' }).catch((err) => console.error('Failed to record play event', err));
+    }
+  }, []);
+
+  const pause = useCallback(() => {
+    setState((prev) => ({ ...prev, isPlaying: false, autoplaySpotify: false, autoplayYoutube: false }));
+  }, []);
+
+  const stop = useCallback(() => {
+    setState((prev) => ({ ...prev, isPlaying: false, spotifyOpen: false, youtubeOpen: false, spotifyTrackId: null, youtubeTrackId: null, canonicalTrackId: null, autoplaySpotify: false, autoplayYoutube: false, seekToSec: null }));
   }, []);
 
   // High-level play/pause/stop helpers
