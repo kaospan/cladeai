@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { ChartErrorBoundary } from '@/components/ui/ChartErrorBoundary';
 import {
   Activity,
   TrendingUp,
@@ -310,26 +311,28 @@ export default function AdminPerformanceDashboard() {
             </CardHeader>
             <CardContent>
               {hasTrends ? (
-                <div className="w-full" role="presentation" aria-hidden>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={safeTrends.slice(0, 15)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="test_name"
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                        interval={0}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis label={{ value: 'Duration (ms)', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="avg_duration" fill="#8884d8" name="Avg Duration" />
-                      <Bar dataKey="max_duration" fill="#82ca9d" name="Max Duration" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <ChartErrorBoundary>
+                  <div className="w-full" role="presentation" aria-hidden>
+                    <ResponsiveContainer width="100%" height={420}>
+                      <BarChart data={safeTrends.slice(0, 15)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="test_name"
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          interval={0}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis label={{ value: 'Duration (ms)', angle: -90, position: 'insideLeft' }} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="avg_duration" fill="#8884d8" name="Avg Duration" />
+                        <Bar dataKey="max_duration" fill="#82ca9d" name="Max Duration" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </ChartErrorBoundary>
               ) : (
                 <div className="h-64 flex items-center justify-center text-muted-foreground">
                   No trend data available
@@ -384,9 +387,10 @@ export default function AdminPerformanceDashboard() {
             </CardHeader>
             <CardContent>
               {safeHistory.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={320}>
-                    <LineChart data={safeHistory}>
+                <ChartErrorBoundary>
+                  <>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <LineChart data={safeHistory}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
                         dataKey="tested_at"
@@ -438,8 +442,8 @@ export default function AdminPerformanceDashboard() {
                       </p>
                       <p className="text-sm text-muted-foreground">Worst Time</p>
                     </div>
-                  </div>
-                </>
+                  </>
+                </ChartErrorBoundary>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />

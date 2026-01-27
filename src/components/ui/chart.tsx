@@ -2,6 +2,7 @@ import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
+import { ChartErrorBoundary } from "@/components/ui/ChartErrorBoundary";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -75,9 +76,11 @@ const ChartContainer = React.forwardRef<
         <ChartStyle id={chartId} config={config} />
         <div className="w-full h-full">
           {hasSize ? (
-            <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
-              {children}
-            </RechartsPrimitive.ResponsiveContainer>
+            <ChartErrorBoundary>
+              <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
+                {children}
+              </RechartsPrimitive.ResponsiveContainer>
+            </ChartErrorBoundary>
           ) : null}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayer } from './PlayerContext';
 import { YouTubePlayer } from './providers/YouTubePlayer';
@@ -20,6 +20,68 @@ type EmbeddedPlayerDrawerProps = {
   canNext?: boolean;
   canPrev?: boolean;
 };
+
+/**
+ * Hook to animate the seekbar smoothly between provider updates.
+ * Syncs to authoritative positionMs on each update while animating locally via RAF.
+ */
+function useAnimatedSeekbar(
+  positionMs: number,
+  durationMs: number,
+  isPlaying: boolean
+): number {
+  const [displayMs, setDisplayMs] = useState(positionMs);
+  const rafIdRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number>(performance.now());
+  const lastAuthorityMsRef = useRef<number>(positionMs);
+
+  // Sync to authoritative position when it changes meaningfully
+  useEffect(() => {
+    const delta = Math.abs(positionMs - lastAuthorityMsRef.current);
+    // Accept authority if delta is significant (>150ms) or if it jumped backward
+    if (delta > 150 || positionMs < lastAuthorityMsRef.current - 50) {
+      setDisplayMs(positionMs);
+    }
+    lastAuthorityMsRef.current = positionMs;
+    lastFrameTimeRef.current = performance.now();
+  }, [positionMs]);
+
+  // Animate forward during playback using RAF
+  useEffect(() => {
+    if (!isPlaying) {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      return;
+    }
+
+    const animate = (now: number) => {
+      const elapsed = now - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = now;
+
+      setDisplayMs((prev) => {
+        const next = prev + elapsed;
+        // Clamp to duration
+        return durationMs > 0 ? Math.min(next, durationMs) : next;
+      });
+
+      rafIdRef.current = requestAnimationFrame(animate);
+    };
+
+    lastFrameTimeRef.current = performance.now();
+    rafIdRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [isPlaying, durationMs]);
+
+  return displayMs;
+}
 
 export function EmbeddedPlayerDrawer({ onNext, onPrev, canNext, canPrev }: EmbeddedPlayerDrawerProps) {
   const {
@@ -68,8 +130,12 @@ export function EmbeddedPlayerDrawer({ onNext, onPrev, canNext, canPrev }: Embed
   const resolvedTitle = trackTitle ?? lastKnownTitle ?? '';
   const resolvedArtist = trackArtist ?? lastKnownArtist ?? '';
   const safeMs = (value: number) => (Number.isFinite(value) ? Math.max(0, value) : 0);
-  const positionSec = Math.max(0, safeMs(positionMs) / 1000);
-  const durationSec = Math.max(positionSec, safeMs(durationMs) / 1000);
+  
+  // Use animated seekbar for smooth visual updates
+  const animatedPositionMs = useAnimatedSeekbar(safeMs(positionMs), safeMs(durationMs), isPlaying);
+  const positionSec = Math.max(0, animatedPositionMs / 1000);
+  const durationSec = Math.max(0, safeMs(durationMs) / 1000);
+  
   const volumePercent = Math.round((isMuted ? 0 : Number.isFinite(volume) ? volume : 0) * 100);
   const effectiveCanNext = canNext ?? queue.length > 1;
   const effectiveCanPrev = canPrev ?? queue.length > 1;
