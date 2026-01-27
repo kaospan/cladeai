@@ -5,6 +5,7 @@ import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { CTASection } from '@/components/landing/CTASection';
 import { Footer } from '@/components/landing/Footer';
+import { BottomNav } from '@/components/BottomNav';
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
       </div>
       <CTASection />
       <Footer />
+      <BottomNav />
     </div>
   );
 };
