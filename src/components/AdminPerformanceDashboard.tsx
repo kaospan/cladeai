@@ -310,8 +310,8 @@ export default function AdminPerformanceDashboard() {
             </CardHeader>
             <CardContent>
               {hasTrends ? (
-                <div className="h-[420px]" role="presentation" aria-hidden>
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full" role="presentation" aria-hidden>
+                  <ResponsiveContainer width="100%" height={420}>
                     <BarChart data={safeTrends.slice(0, 15)}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -385,7 +385,7 @@ export default function AdminPerformanceDashboard() {
             <CardContent>
               {safeHistory.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={320}>
                     <LineChart data={safeHistory}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
