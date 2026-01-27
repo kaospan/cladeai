@@ -95,15 +95,20 @@ export function HeroSection() {
       {/* Waveform visualization */}
       <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20">
         <svg className="w-full h-full" preserveAspectRatio="none">
-          <motion.path
-            d="M0,50 Q25,20 50,50 T100,50 Q125,80 150,50 T200,50 Q225,20 250,50 T300,50 Q325,80 350,50 T400,50"
-            stroke="url(#waveGradient)"
-            strokeWidth="3"
-            fill="none"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
+          {(() => {
+            const wavePath = "M0,50 Q25,20 50,50 T100,50 Q125,80 150,50 T200,50 Q225,20 250,50 T300,50 Q325,80 350,50 T400,50";
+            return (
+              <motion.path
+                d={wavePath ?? ''}
+                stroke="url(#waveGradient)"
+                strokeWidth="3"
+                fill="none"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            );
+          })()}
           <defs>
             <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#00F5FF" />

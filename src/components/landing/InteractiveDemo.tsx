@@ -112,26 +112,31 @@ export function InteractiveDemo() {
               {/* Waveform visualization */}
               <div className="mb-8 h-32 relative">
                 <svg className="w-full h-full" preserveAspectRatio="none">
-                  {selectedTrackData.progression.map((_, index) => (
-                    <motion.rect
-                      key={index}
-                      x={`${index * 25}%`}
-                      y="20%"
-                      width="20%"
-                      height="60%"
-                      fill={selectedTrackData.color}
-                      opacity={hoveredChord === index ? 0.8 : 0.4}
-                      animate={{
-                        height: ['40%', '70%', '40%'],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        delay: index * 0.2,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  ))}
+                  {selectedTrackData.progression.map((_, index) => {
+                    const x = `${index * 25}%`;
+                    const baseHeight = '60%';
+                    const animHeights = ['40%', '70%', '40%'];
+                    return (
+                      <motion.rect
+                        key={index}
+                        x={x ?? ''}
+                        y="20%"
+                        width="20%"
+                        height={baseHeight ?? ''}
+                        fill={selectedTrackData.color}
+                        opacity={hoveredChord === index ? 0.8 : 0.4}
+                        animate={{
+                          height: animHeights.filter(Boolean),
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          delay: index * 0.2,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                    );
+                  })}
                 </svg>
               </div>
 

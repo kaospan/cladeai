@@ -141,24 +141,24 @@ export function Footer() {
       {/* Decorative bottom wave */}
       <div className="absolute bottom-0 left-0 right-0 h-1 opacity-20">
         <svg className="w-full h-full" preserveAspectRatio="none">
-          <motion.path
-            d="M0,0 Q25,5 50,0 T100,0 Q125,5 150,0 T200,0"
-            stroke="url(#footerGradient)"
-            strokeWidth="2"
-            fill="none"
-            animate={{
-              d: [
-                'M0,0 Q25,5 50,0 T100,0 Q125,5 150,0 T200,0',
-                'M0,5 Q25,0 50,5 T100,5 Q125,0 150,5 T200,5',
-                'M0,0 Q25,5 50,0 T100,0 Q125,5 150,0 T200,0',
-              ],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
+          {(() => {
+            const base = 'M0,0 Q25,5 50,0 T100,0 Q125,5 150,0 T200,0';
+            const alt = 'M0,5 Q25,0 50,5 T100,5 Q125,0 150,5 T200,5';
+            return (
+              <motion.path
+                d={base ?? ''}
+                stroke="url(#footerGradient)"
+                strokeWidth="2"
+                fill="none"
+                animate={{ d: [base ?? '', alt ?? '', base ?? ''] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            );
+          })()}
           <defs>
             <linearGradient id="footerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#00F5FF" />
