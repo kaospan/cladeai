@@ -119,8 +119,9 @@ export function useConnectSpotify() {
       console.log('[Spotify Connect] State stored:', state.substring(0, 8) + '...');
 
       // Get the redirect URI - should match what's configured in Spotify Developer Dashboard
-      const redirectUri = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 
-        `${window.location.origin}/spotify-callback`;
+      const basePath = import.meta.env.BASE_URL || '/';
+      const redirectUri = import.meta.env.VITE_SPOTIFY_REDIRECT_URI 
+        || `${window.location.origin}${basePath.endsWith('/') ? basePath : basePath + '/'}spotify-callback`;
       console.log('[Spotify Connect] Redirect URI:', redirectUri);
 
       // Build authorization URL
