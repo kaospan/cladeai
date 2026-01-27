@@ -442,6 +442,7 @@ export default function AdminPerformanceDashboard() {
                       </p>
                       <p className="text-sm text-muted-foreground">Worst Time</p>
                     </div>
+                  </div>
                   </>
                 </ChartErrorBoundary>
               ) : (
