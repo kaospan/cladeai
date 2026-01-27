@@ -58,6 +58,7 @@ function transformSpotifyTrack(item: SpotifyPlayHistoryItem): Track {
     preview_url: track.preview_url,
     provider: 'spotify',
     external_id: track.id,
+    played_at: item.played_at,
   };
 }
 
@@ -104,9 +105,21 @@ export async function getRecentlyPlayedTracks(
     }
 
     const data: SpotifyRecentlyPlayedResponse = await response.json();
-    const tracks = data.items.map(transformSpotifyTrack);
 
-    return { tracks, source: 'spotify' };
+    const unique: Track[] = [];
+    const seen = new Set<string>();
+
+    for (const item of data.items) {
+      const t = transformSpotifyTrack(item);
+      const key = t.spotify_id || t.id;
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        unique.push(t);
+      }
+      if (unique.length >= limit) break;
+    }
+
+    return { tracks: unique.slice(0, limit), source: 'spotify' };
   } catch (error) {
     console.error('Error fetching recently played:', error);
     return null;
