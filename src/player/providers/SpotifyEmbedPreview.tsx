@@ -165,13 +165,14 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
 
     const setup = async () => {
       try {
-        await loadSdk();
+        const [_, token] = await Promise.all([
+          loadSdk(),
+          getValidAccessToken(user.id).catch((err) => {
+            console.warn('Spotify token fetch failed, using embed fallback', err);
+            return null;
+          }),
+        ]);
         if (cancelled || !window.Spotify) return;
-
-        const token = await getValidAccessToken(user.id).catch((err) => {
-          console.warn('Spotify token fetch failed, using embed fallback', err);
-          return null;
-        });
         tokenRef.current = token;
         if (!token) {
           setUseEmbedFallback(true);
