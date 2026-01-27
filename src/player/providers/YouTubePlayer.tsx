@@ -12,18 +12,23 @@ interface YouTubePlayerProps {
 export function YouTubePlayer({ providerTrackId, autoplay }: YouTubePlayerProps) {
   const { provider, isMuted, registerProviderControls, updatePlaybackState, clearSeek, setDuration } = usePlayer();
 
+  // Browsers will often block autoplay on unmuted YouTube iframes; force mute when autoplaying
+  // to maximize successful start, while still honoring explicit mute state when set.
+  const shouldAutoplay = Boolean(autoplay);
+  const shouldMute = isMuted || shouldAutoplay;
+
   const src = useMemo(() => {
     if (!providerTrackId) return '';
     const base = `https://www.youtube.com/embed/${providerTrackId}`;
     const params = new URLSearchParams({
-      autoplay: autoplay ? '1' : '0',
-      mute: isMuted ? '1' : '0',
+      autoplay: shouldAutoplay ? '1' : '0',
+      mute: shouldMute ? '1' : '0',
       playsinline: '1',
       controls: '1',
       rel: '0',
     });
     return `${base}?${params.toString()}`;
-  }, [providerTrackId, autoplay, isMuted]);
+  }, [providerTrackId, shouldAutoplay, shouldMute]);
 
   useEffect(() => {
     if (provider !== 'youtube') return;
@@ -39,7 +44,7 @@ export function YouTubePlayer({ providerTrackId, autoplay }: YouTubePlayerProps)
     updatePlaybackState({ isPlaying: !!autoplay, positionMs: 0 });
     setDuration(0);
     clearSeek();
-  }, [provider, registerProviderControls, updatePlaybackState, clearSeek, autoplay]);
+  }, [provider, registerProviderControls, updatePlaybackState, clearSeek, shouldAutoplay]);
 
   if (provider !== 'youtube' || !providerTrackId) return null;
 

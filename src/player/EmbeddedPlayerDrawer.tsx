@@ -6,11 +6,12 @@ import { SpotifyEmbedPreview } from './providers/SpotifyEmbedPreview';
 import { Volume2, VolumeX, Maximize2, X, ChevronDown, ChevronUp, Play, Pause, Square, SkipBack, SkipForward, ListMusic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QueueSheet } from './QueueSheet';
+import { SpotifyIcon, YouTubeIcon, AppleMusicIcon } from '@/components/QuickStreamButtons';
 
 const providerMeta = {
-  spotify: { label: 'Spotify', badge: '🎧', color: 'bg-black/90' },
-  youtube: { label: 'YouTube', badge: '▶', color: 'bg-black/90' },
-  apple_music: { label: 'Apple Music', badge: '', color: 'bg-neutral-900/90' },
+  spotify: { label: 'Spotify', badge: '🎧', color: 'bg-black/90', Icon: SpotifyIcon },
+  youtube: { label: 'YouTube', badge: '▶', color: 'bg-black/90', Icon: YouTubeIcon },
+  apple_music: { label: 'Apple Music', badge: '', color: 'bg-neutral-900/90', Icon: AppleMusicIcon },
 } as const;
 
 type EmbeddedPlayerDrawerProps = {
@@ -197,6 +198,12 @@ export function EmbeddedPlayerDrawer({ onNext, onPrev, canNext, canPrev }: Embed
             <span className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-background/80 text-lg md:text-xl shadow-inner">
               {meta.badge}
             </span>
+            {meta.Icon && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 text-white text-[10px] md:text-xs shadow-inner">
+                <meta.Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="font-semibold tracking-tight">{meta.label}</span>
+              </span>
+            )}
             <div className="flex flex-col leading-tight flex-1 min-w-0">
               <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Now Playing</span>
               {resolvedTitle && (
