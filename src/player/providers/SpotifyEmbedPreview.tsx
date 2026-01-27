@@ -218,29 +218,38 @@ export function SpotifyEmbedPreview({ providerTrackId, autoplay }: SpotifyEmbedP
           });
 
           player.addListener('player_state_changed', (state) => {
-            if (!state) return;
-            console.log('[Spotify] state:', {
-              paused: state.paused,
-              position: state.position,
-              duration: state.duration,
-              track: state.track_window?.current_track?.name,
-              volume: state.device?.volume_percent,
-            });
-            if (state.duration) {
-              setDuration(state.duration);
-            }
-            updatePlaybackState({
-              positionMs: state.position,
-              durationMs: state.duration,
-              isPlaying: !state.paused,
-              volume: state.volume ?? volumeRef.current,
-              isMuted: state.volume === 0,
-              trackTitle: state.track_window?.current_track?.name ?? null,
-              trackArtist: state.track_window?.current_track?.artists?.map((a) => a.name).join(', ') ?? null,
-              trackAlbum: state.track_window?.current_track?.album?.name ?? null,
-            });
-            if (state.track_window?.current_track?.id) {
-              lastTrackStarted.id = state.track_window.current_track.id;
+            try {
+              if (!state) return;
+              const artistsArr = Array.isArray(state.track_window?.current_track?.artists)
+                ? state.track_window?.current_track?.artists
+                : [];
+              const artistNames = artistsArr.map((a) => a?.name).filter(Boolean).join(', ') || null;
+
+              console.log('[Spotify] state:', {
+                paused: state.paused,
+                position: state.position,
+                duration: state.duration,
+                track: state.track_window?.current_track?.name,
+                volume: state.device?.volume_percent ?? state.volume,
+              });
+              if (state.duration) {
+                setDuration(state.duration);
+              }
+              updatePlaybackState({
+                positionMs: state.position,
+                durationMs: state.duration,
+                isPlaying: !state.paused,
+                volume: state.volume ?? volumeRef.current,
+                isMuted: state.volume === 0,
+                trackTitle: state.track_window?.current_track?.name ?? null,
+                trackArtist: artistNames,
+                trackAlbum: state.track_window?.current_track?.album?.name ?? null,
+              });
+              if (state.track_window?.current_track?.id) {
+                lastTrackStarted.id = state.track_window.current_track.id;
+              }
+            } catch (err) {
+              console.warn('[Spotify] state handler error', err);
             }
           });
 
