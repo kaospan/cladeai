@@ -12,8 +12,14 @@
  * 5. Update job status to 'completed' or 'failed'
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+
+const ANALYSIS_CONFIG = {
+  CACHE_TTL_DAYS: 90,
+  REANALYSIS_THRESHOLD_DAYS: 365,
+  CURRENT_MODEL_VERSION: '1.0.0',
+} as const
 
 interface AnalysisRequest {
   track_id: string
@@ -21,6 +27,21 @@ interface AnalysisRequest {
   isrc?: string
   priority?: 'low' | 'normal' | 'high'
   force_reanalysis?: boolean
+  job_id?: string
+}
+
+interface AnalysisJob {
+  id: string
+  track_id: string
+  audio_hash?: string | null
+  isrc?: string | null
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'cached'
+  progress: number
+  started_at: string
+  completed_at?: string | null
+  error_message?: string | null
+  analysis_version: string
+  result?: HarmonicFingerprint | null
 }
 
 interface HarmonicFingerprint {
@@ -54,6 +75,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const nowIso = new Date().toISOString()
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -68,83 +90,132 @@ Deno.serve(async (req) => {
 
     // Parse request
     const request: AnalysisRequest = await req.json()
-    const { track_id, audio_hash, isrc, force_reanalysis } = request
+    const { track_id, audio_hash, isrc, force_reanalysis, job_id } = request
 
     console.log('[HarmonicAnalysis] Processing request:', {
       track_id,
       has_audio_hash: !!audio_hash,
       has_isrc: !!isrc,
-      force_reanalysis
+      force_reanalysis,
+      job_id,
     })
 
     // Step 1: Check for existing analysis (unless force_reanalysis)
-    if (!force_reanalysis) {
-      const { data: existing } = await supabaseClient
-        .from('harmonic_fingerprints')
-        .select('*')
-        .eq('track_id', track_id)
-        .gte('reuse_until', new Date().toISOString())
-        .order('analysis_timestamp', { ascending: false })
-        .limit(1)
+    const reusableFingerprint = force_reanalysis
+      ? null
+      : await findReusableFingerprint(supabaseClient, {
+          track_id,
+          audio_hash,
+          isrc,
+          nowIso,
+        })
 
-      if (existing && existing.length > 0) {
-        console.log('[HarmonicAnalysis] Using cached result')
-        return new Response(
-          JSON.stringify({
-            success: true,
-            fingerprint: existing[0],
-            method: 'cached'
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200
-          }
-        )
-      }
-    }
+    if (reusableFingerprint) {
+      console.log('[HarmonicAnalysis] Using cached result')
 
-    // Step 2: Create or find analysis job
-    const jobId = crypto.randomUUID()
-    const now = new Date().toISOString()
-
-    const { error: insertError } = await supabaseClient
-      .from('analysis_jobs')
-      .insert({
-        id: jobId,
-        track_id,
-        audio_hash: audio_hash ?? null,
-        isrc: isrc ?? null,
-        status: 'processing',
-        progress: 0.0,
-        started_at: now,
-        analysis_version: '1.0.0'
+      await markJobCached(supabaseClient, {
+        jobId: job_id,
+        fallbackLookup: { track_id, audio_hash, isrc },
+        result: reusableFingerprint,
       })
 
-    if (insertError) {
-      throw new Error(`Failed to create job: ${insertError.message}`)
+      return jsonResponse({
+        success: true,
+        fingerprint: reusableFingerprint,
+        method: 'cached',
+        job_id: job_id,
+      })
     }
 
-    // Step 3: Run analysis pipeline
-    console.log('[HarmonicAnalysis] Starting analysis:', jobId)
+    // Step 2: Find or create analysis job (idempotent)
+    let job = await findActiveJob(supabaseClient, {
+      jobId: job_id,
+      track_id,
+      audio_hash,
+      isrc,
+    })
+
+    if (!job) {
+      const newJobId = job_id ?? crypto.randomUUID()
+      const { data: inserted, error: insertError } = await supabaseClient
+        .from('analysis_jobs')
+        .insert({
+          id: newJobId,
+          track_id,
+          audio_hash: audio_hash ?? null,
+          isrc: isrc ?? null,
+          status: 'processing',
+          progress: 0.05,
+          started_at: nowIso,
+          analysis_version: ANALYSIS_CONFIG.CURRENT_MODEL_VERSION,
+        })
+        .select('*')
+        .limit(1)
+
+      if (insertError) {
+        throw new Error(`Failed to create job: ${insertError.message}`)
+      }
+
+      job = (inserted?.[0] as AnalysisJob) ?? null
+    } else if (job.status !== 'processing') {
+      const { data: updated, error: updateError } = await supabaseClient
+        .from('analysis_jobs')
+        .update({
+          status: 'processing',
+          progress: 0.05,
+          updated_at: nowIso,
+          analysis_version: ANALYSIS_CONFIG.CURRENT_MODEL_VERSION,
+        })
+        .eq('id', job.id)
+        .select('*')
+        .limit(1)
+
+      if (updateError) {
+        throw new Error(`Failed to adopt job: ${updateError.message}`)
+      }
+
+      job = (updated?.[0] as AnalysisJob) ?? job
+    }
+
+    if (!job) {
+      throw new Error('Unable to initialize analysis job')
+    }
+
+    console.log('[HarmonicAnalysis] Starting analysis:', job.id)
 
     // Update progress: Fetching audio
-    await updateJobProgress(supabaseClient, jobId, 0.2)
+    await updateJobProgress(supabaseClient, job.id, 0.2)
 
     // TODO: Integrate actual ML model here
     // For now, use mock analysis
     const fingerprint = await runMockAnalysis(track_id, audio_hash, isrc)
 
     // Update progress: Extracting features
-    await updateJobProgress(supabaseClient, jobId, 0.5)
+    await updateJobProgress(supabaseClient, job.id, 0.5)
 
     // Update progress: Detecting harmony
-    await updateJobProgress(supabaseClient, jobId, 0.8)
+    await updateJobProgress(supabaseClient, job.id, 0.8)
 
-    // Step 4: Store result
+    const fingerprintToStore: HarmonicFingerprint = {
+      ...fingerprint,
+      audio_hash: audio_hash ?? fingerprint.audio_hash ?? null,
+      isrc: isrc ?? fingerprint.isrc ?? null,
+      analysis_version: ANALYSIS_CONFIG.CURRENT_MODEL_VERSION,
+      analysis_timestamp: nowIso,
+      is_provisional: false,
+    }
+
+    // Step 4: Store result with idempotent conflict key
+    const conflictKey = fingerprintToStore.audio_hash
+      ? 'audio_hash'
+      : fingerprintToStore.isrc
+        ? 'isrc'
+        : 'track_id'
+
     const { error: storeError } = await supabaseClient
       .from('harmonic_fingerprints')
-      .upsert(fingerprint, {
-        onConflict: audio_hash ? 'audio_hash' : 'track_id'
+      .upsert(fingerprintToStore, {
+        onConflict: conflictKey,
       })
 
     if (storeError) {
@@ -158,42 +229,31 @@ Deno.serve(async (req) => {
         status: 'completed',
         progress: 1.0,
         completed_at: new Date().toISOString(),
-        result: fingerprint,
-        updated_at: new Date().toISOString()
+        result: fingerprintToStore,
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', jobId)
+      .eq('id', job.id)
 
     if (completeError) {
       console.error('[HarmonicAnalysis] Failed to update job:', completeError)
     }
 
-    console.log('[HarmonicAnalysis] Analysis complete:', jobId)
+    console.log('[HarmonicAnalysis] Analysis complete:', job.id)
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        job_id: jobId,
-        fingerprint,
-        method: 'ml_audio'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
-    )
+    return jsonResponse({
+      success: true,
+      job_id: job.id,
+      fingerprint: fingerprintToStore,
+      method: 'ml_audio',
+    })
   } catch (error) {
     console.error('[HarmonicAnalysis] Error:', error)
 
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
-    )
+    const errMessage = (error as Error)?.message ?? 'Unknown error'
+    return jsonResponse({
+      success: false,
+      error: errMessage,
+    }, 500)
   }
 })
 
@@ -210,6 +270,134 @@ async function updateJobProgress(
       updated_at: new Date().toISOString()
     })
     .eq('id', jobId)
+}
+
+// Helper: Prioritized cache lookup with TTL + reanalysis windows
+async function findReusableFingerprint(
+  supabaseClient: SupabaseClient,
+  params: { track_id: string; audio_hash?: string; isrc?: string; nowIso: string }
+): Promise<HarmonicFingerprint | null> {
+  const { track_id, audio_hash, isrc, nowIso } = params
+
+  const lookup = async (column: 'audio_hash' | 'isrc' | 'track_id', value: string) => {
+    const { data, error } = await supabaseClient
+      .from('harmonic_fingerprints')
+      .select('*')
+      .eq(column, value)
+      .gte('reuse_until', nowIso)
+      .gte('reanalyze_after', nowIso)
+      .order('analysis_timestamp', { ascending: false })
+      .limit(1)
+
+    if (error) {
+      console.error('[HarmonicAnalysis] Cache lookup error:', error.message)
+      return null
+    }
+
+    return (data?.[0] as HarmonicFingerprint | undefined) ?? null
+  }
+
+  if (audio_hash) {
+    const hit = await lookup('audio_hash', audio_hash)
+    if (hit) return hit
+  }
+
+  if (isrc) {
+    const hit = await lookup('isrc', isrc)
+    if (hit) return hit
+  }
+
+  return await lookup('track_id', track_id)
+}
+
+// Helper: Find active job by priority or explicit id
+async function findActiveJob(
+  supabaseClient: SupabaseClient,
+  params: { jobId?: string; track_id: string; audio_hash?: string; isrc?: string }
+): Promise<AnalysisJob | null> {
+  const { jobId, track_id, audio_hash, isrc } = params
+
+  if (jobId) {
+    const { data, error } = await supabaseClient
+      .from('analysis_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .limit(1)
+
+    if (error) {
+      console.error('[HarmonicAnalysis] Job lookup by id failed:', error.message)
+    }
+
+    if (data?.[0]) return data[0] as AnalysisJob
+  }
+
+  const statuses = ['queued', 'processing']
+  const search = async (column: 'audio_hash' | 'isrc' | 'track_id', value: string) => {
+    const { data, error } = await supabaseClient
+      .from('analysis_jobs')
+      .select('*')
+      .eq(column, value)
+      .in('status', statuses)
+      .order('started_at', { ascending: false })
+      .limit(1)
+
+    if (error) {
+      console.error('[HarmonicAnalysis] Job lookup error:', error.message)
+      return null
+    }
+
+    return (data?.[0] as AnalysisJob | undefined) ?? null
+  }
+
+  if (audio_hash) {
+    const hit = await search('audio_hash', audio_hash)
+    if (hit) return hit
+  }
+
+  if (isrc) {
+    const hit = await search('isrc', isrc)
+    if (hit) return hit
+  }
+
+  return await search('track_id', track_id)
+}
+
+// Helper: Mark job as cached reuse (if job exists)
+async function markJobCached(
+  supabaseClient: SupabaseClient,
+  params: {
+    jobId?: string
+    fallbackLookup: { track_id: string; audio_hash?: string; isrc?: string }
+    result: HarmonicFingerprint
+  }
+): Promise<void> {
+  const { jobId, fallbackLookup, result } = params
+  const nowIso = new Date().toISOString()
+
+  const job = jobId
+    ? await findActiveJob(supabaseClient, { jobId, ...fallbackLookup })
+    : await findActiveJob(supabaseClient, fallbackLookup)
+
+  if (!job) return
+
+  await supabaseClient
+    .from('analysis_jobs')
+    .update({
+      status: 'cached',
+      progress: 1.0,
+      completed_at: nowIso,
+      result,
+      updated_at: nowIso,
+    })
+    .eq('id', job.id)
+}
+
+// Helper: JSON response with CORS
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status,
+  })
 }
 
 // Mock analysis (placeholder until ML model integrated)
