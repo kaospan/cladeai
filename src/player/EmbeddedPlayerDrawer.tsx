@@ -141,7 +141,7 @@ export function EmbeddedPlayerDrawer({ onNext, onPrev, canNext, canPrev }: Embed
   const effectiveCanPrev = canPrev ?? queue.length > 1;
 
   const meta = useMemo(() => {
-    const fallback = { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90' };
+    const fallback = { label: 'Now Playing', badge: '♪', color: 'bg-neutral-900/90', Icon: null as React.ComponentType<{ className?: string }> | null };
     return provider ? providerMeta[provider as keyof typeof providerMeta] ?? fallback : fallback;
   }, [provider]);
 
