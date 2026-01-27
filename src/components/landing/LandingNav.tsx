@@ -32,6 +32,7 @@ export function LandingNav() {
   }, []);
 
   const navItems = [
+    { label: 'Explore', href: '/auth' },
     { label: 'Features', href: '#features' },
     { label: 'Demo', href: '#demo' },
     { label: 'Testimonials', href: '#testimonials' },
