@@ -7,7 +7,7 @@ import { additionalHistoricalTracks } from './additionalHistoricalTracks';
 
 export type SeedTrack = Track;
 
-export const seedTracks: SeedTrack[] = [
+const rawSeedTracks: SeedTrack[] = [
   {
     id: 'seed-1',
     external_id: 'spotify:track:seed1',
