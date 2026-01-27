@@ -310,24 +310,26 @@ export default function AdminPerformanceDashboard() {
             </CardHeader>
             <CardContent>
               {hasTrends ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={safeTrends.slice(0, 15)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="test_name"
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                      interval={0}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis label={{ value: 'Duration (ms)', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="avg_duration" fill="#8884d8" name="Avg Duration" />
-                    <Bar dataKey="max_duration" fill="#82ca9d" name="Max Duration" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[420px]" role="presentation" aria-hidden>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={safeTrends.slice(0, 15)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="test_name"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        interval={0}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis label={{ value: 'Duration (ms)', angle: -90, position: 'insideLeft' }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="avg_duration" fill="#8884d8" name="Avg Duration" />
+                      <Bar dataKey="max_duration" fill="#82ca9d" name="Max Duration" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
                 <div className="h-64 flex items-center justify-center text-muted-foreground">
                   No trend data available
