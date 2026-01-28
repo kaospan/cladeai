@@ -3,7 +3,7 @@ import { Music } from 'lucide-react';
 import { useCallback } from 'react';
 import { TrackProviderInfo, getProviderLinks } from '@/lib/providers';
 import { getPreferredProvider, setPreferredProvider } from '@/lib/preferences';
-import { useFloatingPlayers } from '@/contexts/FloatingPlayersContext';
+import { usePlayer } from '@/player/PlayerContext';
 import { cn } from '@/lib/utils';
 
 interface QuickStreamButtonsProps {
@@ -48,25 +48,33 @@ export function QuickStreamButtons({
   const spotifyLink = links.find(l => l.provider === 'spotify');
   const youtubeLink = links.find(l => l.provider === 'youtube');
   const preferredProvider = getPreferredProvider();
-  const { playSpotify, playYouTube, setActivePlayer } = useFloatingPlayers();
+  const { openPlayer } = usePlayer();
 
   const handleSpotifyClick = useCallback(() => {
     if (track.spotifyId) {
       setPreferredProvider('spotify');
-      playSpotify(track.spotifyId, trackTitle, trackArtist);
-      // This will minimize YouTube if it's open
-      setActivePlayer('spotify');
+      openPlayer({
+        canonicalTrackId: null,
+        provider: 'spotify',
+        providerTrackId: track.spotifyId,
+        autoplay: true,
+        context: 'quickstream',
+      });
     }
-  }, [track.spotifyId, trackTitle, trackArtist, playSpotify, setActivePlayer]);
+  }, [track.spotifyId, openPlayer]);
 
   const handleYouTubeClick = useCallback(() => {
     if (track.youtubeId) {
       setPreferredProvider('youtube');
-      playYouTube(track.youtubeId, trackTitle, trackArtist);
-      // This will minimize Spotify if it's open
-      setActivePlayer('youtube');
+      openPlayer({
+        canonicalTrackId: null,
+        provider: 'youtube',
+        providerTrackId: track.youtubeId,
+        autoplay: true,
+        context: 'quickstream',
+      });
     }
-  }, [track.youtubeId, trackTitle, trackArtist, playYouTube, setActivePlayer]);
+  }, [track.youtubeId, openPlayer]);
 
   const sizeClasses = {
     sm: 'w-8 h-8',

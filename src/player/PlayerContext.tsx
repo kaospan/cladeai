@@ -1,13 +1,17 @@
-import { createContext, useContext, useMemo, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, useCallback, ReactNode, useRef, useEffect } from 'react';
 import { recordPlayEvent } from '@/api/playEvents';
 import { MusicProvider } from '@/types';
 import { getPreferredProvider } from '@/lib/preferences';
 
-export interface ConnectedProviders {
-  spotify?: { connected: boolean; premium: boolean };
-}
+interface ConnectedProviders {
+  spotify?: { connected: boolean };
+  youtube?: { connected: boolean };
+  apple_music?: { connected: boolean };
+} 
 
 export interface PlayerState {
+  provider: MusicProvider | null;
+  trackId: string | null;
   spotifyOpen: boolean;
   youtubeOpen: boolean;
   canonicalTrackId: string | null;
@@ -26,6 +30,13 @@ export interface PlayerState {
   /** Current index in queue */
   queueIndex: number;
 }
+
+type ProviderControls = {
+  play: (startSec?: number | null) => Promise<void> | void;
+  pause: () => Promise<void> | void;
+  seekTo: (seconds: number) => Promise<void> | void;
+  teardown?: () => Promise<void> | void;
+};
 
 type OpenPlayerPayload = {
   canonicalTrackId: string | null;
@@ -46,6 +57,7 @@ interface PlayerContextValue extends PlayerState {
   closeSpotify: () => void;
   closeYoutube: () => void;
   switchProvider: (provider: MusicProvider, providerTrackId: string | null, canonicalTrackId?: string | null) => void;
+  registerProviderControls: (provider: MusicProvider, controls: ProviderControls) => void;
   /** Seek to a specific time (seconds). Used for section navigation. */
   seekTo: (sec: number) => void;
   /** Clear seekToSec after the player has performed the seek */
@@ -76,6 +88,8 @@ const PlayerContext = createContext<PlayerContextValue | null>(null);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PlayerState>({
+    provider: null,
+    trackId: null,
     spotifyOpen: false,
     youtubeOpen: false,
     canonicalTrackId: null,
@@ -89,6 +103,19 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     queue: [],
     queueIndex: -1,
   });
+  const providerControlsRef = useRef<Partial<Record<MusicProvider, ProviderControls>>>({});
+  const activeProviderRef = useRef<MusicProvider | null>(null);
+
+  useEffect(() => {
+    activeProviderRef.current = state.provider;
+  }, [state.provider]);
+
+  const stopProvider = useCallback((provider: MusicProvider | null) => {
+    if (!provider) return;
+    const controls = providerControlsRef.current[provider];
+    controls?.pause?.();
+    controls?.teardown?.();
+  }, []);
 
   const seekTo = useCallback((sec: number) => {
     setState((prev) => ({ ...prev, seekToSec: sec }));
@@ -122,6 +149,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         ...prev,
         queueIndex: index,
         canonicalTrackId: track.id,
+        provider,
+        trackId: providerTrackId,
         spotifyOpen: provider === 'spotify',
         youtubeOpen: provider === 'youtube',
         spotifyTrackId: provider === 'spotify' ? providerTrackId : null,
@@ -177,6 +206,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         ...prev,
         queueIndex: nextIndex,
         canonicalTrackId: track.id,
+        provider,
+        trackId: providerTrackId,
         spotifyTrackId: provider === 'spotify' ? providerTrackId : null,
         youtubeTrackId: provider === 'youtube' ? providerTrackId : null,
         autoplaySpotify: provider === 'spotify',
@@ -201,6 +232,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         ...prev,
         queueIndex: prevIndex,
         canonicalTrackId: track.id,
+        provider,
+        trackId: providerTrackId,
         spotifyTrackId: provider === 'spotify' ? providerTrackId : null,
         youtubeTrackId: provider === 'youtube' ? providerTrackId : null,
         autoplaySpotify: provider === 'spotify',
@@ -211,10 +244,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   // High-level play/pause/stop helpers
   const play = useCallback((canonicalTrackId: string | null, provider: MusicProvider, providerTrackId?: string | null, startSec?: number) => {
+    const prevProvider = activeProviderRef.current;
+    if (prevProvider && prevProvider !== provider) {
+      stopProvider(prevProvider);
+    }
+
     setState((prev) => {
       const updates: Partial<PlayerState> = {
         canonicalTrackId: canonicalTrackId ?? prev.canonicalTrackId,
         seekToSec: startSec ?? null,
+        provider,
+        trackId: providerTrackId ?? prev.trackId,
       };
 
       if (provider === 'spotify') {
@@ -243,11 +283,29 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const pause = useCallback(() => {
     setState((prev) => ({ ...prev, isPlaying: false, autoplaySpotify: false, autoplayYoutube: false }));
-  }, []);
+    const activeProvider = activeProviderRef.current;
+    if (activeProvider) {
+      providerControlsRef.current[activeProvider]?.pause?.();
+    }
+  }, [stopProvider]);
 
   const stop = useCallback(() => {
-    setState((prev) => ({ ...prev, isPlaying: false, spotifyOpen: false, youtubeOpen: false, spotifyTrackId: null, youtubeTrackId: null, canonicalTrackId: null, autoplaySpotify: false, autoplayYoutube: false, seekToSec: null }));
-  }, []);
+    stopProvider(activeProviderRef.current);
+    setState((prev) => ({
+      ...prev,
+      isPlaying: false,
+      provider: null,
+      trackId: null,
+      spotifyOpen: false,
+      youtubeOpen: false,
+      spotifyTrackId: null,
+      youtubeTrackId: null,
+      canonicalTrackId: null,
+      autoplaySpotify: false,
+      autoplayYoutube: false,
+      seekToSec: null,
+    }));
+  }, [stopProvider]);
 
   const value = useMemo<PlayerContextValue>(() => ({
     ...state,
@@ -267,10 +325,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     nextTrack,
     previousTrack,
     openPlayer: (payload) => {
+      const prevProvider = activeProviderRef.current;
+      if (prevProvider && prevProvider !== payload.provider) {
+        stopProvider(prevProvider);
+      }
+
       setState((prev) => {
         const updates: Partial<PlayerState> = {
           canonicalTrackId: payload.canonicalTrackId ?? prev.canonicalTrackId,
           seekToSec: payload.startSec ?? null,
+          provider: payload.provider,
+          trackId: payload.providerTrackId,
         };
 
         if (payload.provider === 'spotify') {
@@ -307,10 +372,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     closeSpotify: () => setState((prev) => ({ ...prev, spotifyOpen: false, autoplaySpotify: false })),
     closeYoutube: () => setState((prev) => ({ ...prev, youtubeOpen: false, autoplayYoutube: false })),
     switchProvider: (provider, providerTrackId, canonicalTrackId) => {
+      const prevProvider = activeProviderRef.current;
+      if (prevProvider && prevProvider !== provider) {
+        stopProvider(prevProvider);
+      }
+
       setState((prev) => {
         const updates: Partial<PlayerState> = {
           canonicalTrackId: canonicalTrackId ?? prev.canonicalTrackId,
           seekToSec: null,
+          provider,
+          trackId: providerTrackId,
         };
 
         if (provider === 'spotify') {
@@ -342,7 +414,26 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-  }), [state, play, pause, stop, seekTo, clearSeek, setCurrentSection, setIsPlaying, addToQueue, playFromQueue, removeFromQueue, reorderQueue, clearQueue, shuffleQueue, nextTrack, previousTrack]);
+    registerProviderControls: (provider, controls) => {
+      providerControlsRef.current[provider] = controls;
+    },
+  }), [state, play, pause, stop, seekTo, clearSeek, setCurrentSection, setIsPlaying, addToQueue, playFromQueue, removeFromQueue, reorderQueue, clearQueue, shuffleQueue, nextTrack, previousTrack, stopProvider]);
+
+  useEffect(() => {
+    if (state.spotifyOpen && state.youtubeOpen) {
+      throw new Error('Invariant violated: both providers open; only one provider may be active.');
+    }
+    if (state.provider && !state.isPlaying && (state.spotifyOpen || state.youtubeOpen)) {
+      // Allows paused state while ensuring only one provider stays active.
+      return;
+    }
+    if (state.provider === 'spotify' && state.youtubeOpen) {
+      throw new Error('Invariant violated: YouTube open while Spotify is active.');
+    }
+    if (state.provider === 'youtube' && state.spotifyOpen) {
+      throw new Error('Invariant violated: Spotify open while YouTube is active.');
+    }
+  }, [state.provider, state.spotifyOpen, state.youtubeOpen, state.isPlaying]);
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 }
